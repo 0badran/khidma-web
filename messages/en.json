@@ -179,5 +179,10 @@
     "phoneChanged": "Phone number changed.",
     "change": "Change",
     "failed": "Something went wrong. Please try again."
+  },
+  "Hero": {
+    "label": "Featured services",
+    "cta": "Find a technician",
+    "goTo": "Slide {number}"
   }
 }

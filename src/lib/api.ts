@@ -10,6 +10,15 @@ export type Category = {
   sortOrder: number;
 };
 
+export type Banner = {
+  id: number;
+  imageUrl: string;
+  titleAr: string | null;
+  titleEn: string | null;
+  linkUrl: string | null;
+  sortOrder: number;
+};
+
 export type Governorate = { id: number; nameAr: string; nameEn: string };
 
 export type Provider = {
@@ -69,6 +78,17 @@ async function apiGet<T>(path: string, locale: string): Promise<T | null> {
 export async function getCategories(locale: string) {
   const data = await apiGet<{ categories: Category[] }>("/api/categories", locale);
   return data?.categories ?? [];
+}
+
+export async function getBanners(locale: string) {
+  try {
+    const data = await apiGet<{ banners: Banner[] }>("/api/banners", locale);
+    return data?.banners ?? [];
+  } catch (error) {
+    if (error instanceof MaintenanceError) throw error;
+    // Older API versions have no banners route. The home page then uses its built-in banners.
+    return [];
+  }
 }
 
 export async function getGovernorates(locale: string) {

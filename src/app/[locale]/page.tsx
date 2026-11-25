@@ -4,6 +4,7 @@ import { redirect } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Hero } from "@/components/hero";
 import { ProviderCard } from "@/components/provider-card";
 import { getCategories, getProviders, MaintenanceError, pick } from "@/lib/api";
 
@@ -25,6 +26,7 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 p-4 py-8">
+      <Hero />
       <section className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground">{t("subtitle")}</p>
