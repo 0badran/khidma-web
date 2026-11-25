@@ -23,7 +23,9 @@ export async function UserMenu() {
 
   return (
     <>
-      <span className="text-muted-foreground">{user.name}</span>
+      <Link href="/account" className="text-muted-foreground hover:text-foreground">
+        {user.name}
+      </Link>
       <form action={logoutAction}>
         <Button type="submit" variant="outline">
           {t("logout")}

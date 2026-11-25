@@ -57,3 +57,35 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 }
+
+export type ProviderProfile = {
+  categoryId: number;
+  cityId: number;
+  governorateId: number;
+  photoUrl: string | null;
+  yearsOfExperience: number | null;
+  bio: string | null;
+  isActive: boolean;
+};
+
+export async function getMe(): Promise<{
+  user: SessionUser;
+  provider: ProviderProfile | null;
+} | null> {
+  const token = await getAccessToken();
+  if (!token || !API_URL) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      user: SessionUser;
+      provider?: ProviderProfile;
+    };
+    return { user: data.user, provider: data.provider ?? null };
+  } catch {
+    return null;
+  }
+}

@@ -4,6 +4,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { RatingForm } from "@/components/rating-form";
+import { getSessionUser } from "@/lib/session";
 import { StarRating } from "@/components/star-rating";
 import { getProvider, getRatings, MaintenanceError, pick } from "@/lib/api";
 import { PhoneIcon, WhatsappLogoIcon, StarIcon } from "@phosphor-icons/react/dist/ssr";
@@ -17,6 +19,7 @@ export default async function ProviderPage({
   const locale = await getLocale();
   const t = await getTranslations("Provider");
 
+  const signedIn = Boolean(await getSessionUser());
   let provider, ratings;
   try {
     [provider, ratings] = await Promise.all([
@@ -100,6 +103,7 @@ export default async function ProviderPage({
             </div>
           ))
         )}
+        <RatingForm providerId={provider.id} signedIn={signedIn} />
       </section>
     </main>
   );
