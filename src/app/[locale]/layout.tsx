@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cairo } from "next/font/google";
+import { Cairo, Geist } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { routing } from "@/i18n/routing";
@@ -7,6 +7,11 @@ import { DirectionProvider } from "@/components/ui/direction";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getTheme, themeToCss } from "@/lib/theme";
 import "../globals.css";
+
+const geist = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -43,7 +48,7 @@ export default async function RootLayout({
       lang={locale}
       dir={direction}
       suppressHydrationWarning
-      className={`${cairo.variable} h-full antialiased`}
+      className={`${geist.variable} ${cairo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {theme ? (
