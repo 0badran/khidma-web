@@ -70,7 +70,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-3 p-4 md:p-8">
+                <div className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-5xl flex-col items-start gap-3 p-4 pb-8 md:p-8 md:pb-10">
                   {title ? (
                     <h2 className="max-w-xl text-xl font-bold text-white md:text-4xl">{title}</h2>
                   ) : null}

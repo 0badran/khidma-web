@@ -25,49 +25,55 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 p-4 py-8">
+    <main className="flex w-full flex-1 flex-col">
       <Hero />
-      <section className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold">{t("title")}</h1>
-        <p className="text-muted-foreground">{t("subtitle")}</p>
-        <form action={`/${locale}/providers`} className="flex gap-2">
-          <Input name="q" placeholder={t("searchPlaceholder")} className="h-9" />
-          <Button type="submit" size="lg">
-            {t("search")}
-          </Button>
-        </form>
-      </section>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 p-4 py-8">
+        <section className="flex flex-col gap-4">
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
+          <form action={`/${locale}/providers`} className="flex gap-2">
+            <Input
+              name="q"
+              placeholder={t("searchPlaceholder")}
+              className="h-9"
+            />
+            <Button type="submit" size="lg">
+              {t("search")}
+            </Button>
+          </form>
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold">{t("categories")}</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/providers?categoryId=${category.id}`}
-              className="flex flex-col items-center gap-2 border p-3 text-center text-sm transition-colors hover:bg-muted/50"
-            >
-              <Image
-                src={category.imageUrl}
-                alt=""
-                width={56}
-                height={56}
-                className="size-14 object-cover"
-              />
-              {pick(locale, category.nameAr, category.nameEn)}
-            </Link>
-          ))}
-        </div>
-      </section>
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold">{t("categories")}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/providers?categoryId=${category.id}`}
+                className="flex flex-col items-center gap-2 border p-3 text-center text-sm transition-colors hover:bg-muted/50"
+              >
+                <Image
+                  src={category.imageUrl}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="size-14 object-cover"
+                />
+                {pick(locale, category.nameAr, category.nameEn)}
+              </Link>
+            ))}
+          </div>
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-bold">{t("topRated")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-          {top.providers.map((provider) => (
-            <ProviderCard key={provider.id} provider={provider} />
-          ))}
-        </div>
-      </section>
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold">{t("topRated")}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {top.providers.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
