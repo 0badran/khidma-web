@@ -1,8 +1,55 @@
 {
-  "HomePage": {
-    "title": "Hello world!"
-  },
   "ThemeToggle": {
     "toggle": "Toggle dark mode"
+  },
+  "Header": {
+    "brand": "Khidma",
+    "providers": "Providers"
+  },
+  "Home": {
+    "title": "Book any home service with ease",
+    "subtitle": "Verified providers in every city in Egypt. Search and call directly.",
+    "searchPlaceholder": "Search by provider name",
+    "search": "Search",
+    "categories": "Categories",
+    "topRated": "Top rated"
+  },
+  "Providers": {
+    "title": "Providers",
+    "searchPlaceholder": "Name or phone number",
+    "category": "Category",
+    "allCategories": "All categories",
+    "governorate": "Governorate",
+    "allGovernorates": "All governorates",
+    "apply": "Apply",
+    "empty": "No providers match your search.",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "Provider": {
+    "experience": "{years} years of experience",
+    "age": "{age} years old",
+    "noRatings": "No ratings yet",
+    "call": "Call",
+    "whatsapp": "WhatsApp",
+    "about": "About",
+    "ratings": "Ratings"
+  },
+  "Loading": {
+    "preparing": "Getting ready... the first load can take about a minute."
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "body": "The link is wrong or the provider is not available.",
+    "back": "Back to home"
+  },
+  "Error": {
+    "title": "Something went wrong",
+    "body": "Please try again in a moment.",
+    "retry": "Try again"
+  },
+  "Maintenance": {
+    "title": "Under maintenance",
+    "body": "We will be back soon. Thanks for your patience."
   }
 }

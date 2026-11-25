@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { routing } from "@/i18n/routing";
 import { DirectionProvider } from "@/components/ui/direction";
+import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getTheme, themeToCss } from "@/lib/theme";
 import "../globals.css";
@@ -59,7 +60,10 @@ export default async function RootLayout({
         ) : null}
         <ThemeProvider>
           <DirectionProvider direction={direction}>
-            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+            <NextIntlClientProvider>
+              <SiteHeader />
+              {children}
+            </NextIntlClientProvider>
           </DirectionProvider>
         </ThemeProvider>
       </body>

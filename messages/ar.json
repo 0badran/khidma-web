@@ -1,8 +1,55 @@
 {
-  "HomePage": {
-    "title": "مرحبا بالعالم!"
-  },
   "ThemeToggle": {
     "toggle": "تبديل الوضع الداكن"
+  },
+  "Header": {
+    "brand": "خدمة",
+    "providers": "الفنيين"
+  },
+  "Home": {
+    "title": "اطلب أي خدمة لبيتك بسهولة",
+    "subtitle": "فنيين موثقين في كل مدينة في مصر. ابحث واتصل مباشرة.",
+    "searchPlaceholder": "ابحث باسم الفني",
+    "search": "بحث",
+    "categories": "الأقسام",
+    "topRated": "الأعلى تقييما"
+  },
+  "Providers": {
+    "title": "الفنيين",
+    "searchPlaceholder": "الاسم أو رقم التليفون",
+    "category": "القسم",
+    "allCategories": "كل الأقسام",
+    "governorate": "المحافظة",
+    "allGovernorates": "كل المحافظات",
+    "apply": "تطبيق",
+    "empty": "مفيش فنيين مطابقين للبحث.",
+    "previous": "السابق",
+    "next": "التالي"
+  },
+  "Provider": {
+    "experience": "خبرة {years} سنة",
+    "age": "{age} سنة",
+    "noRatings": "لسه مفيش تقييمات",
+    "call": "اتصال",
+    "whatsapp": "واتساب",
+    "about": "نبذة",
+    "ratings": "التقييمات"
+  },
+  "Loading": {
+    "preparing": "جاري التحضير... أول تحميل ممكن ياخد حوالي دقيقة."
+  },
+  "NotFound": {
+    "title": "الصفحة مش موجودة",
+    "body": "الرابط غلط أو الفني مش متاح دلوقتي.",
+    "back": "الرجوع للرئيسية"
+  },
+  "Error": {
+    "title": "حصلت مشكلة",
+    "body": "حاول تاني بعد شوية.",
+    "retry": "حاول تاني"
+  },
+  "Maintenance": {
+    "title": "الموقع تحت الصيانة",
+    "body": "هنرجع قريب. شكرا لصبرك."
   }
 }
