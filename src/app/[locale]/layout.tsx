@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { routing } from "@/i18n/routing";
 import { DirectionProvider } from "@/components/ui/direction";
+import { ThemeProvider } from "@/components/theme-provider";
+import { getTheme, themeToCss } from "@/lib/theme";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -38,17 +40,27 @@ export default async function RootLayout({
   }
 
   const direction = locale === "ar" ? "rtl" : "ltr";
+  const theme = await getTheme();
 
   return (
     <html
       lang={locale}
       dir={direction}
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <DirectionProvider direction={direction}>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
-        </DirectionProvider>
+        {theme ? (
+          <style
+            id="khidma-theme"
+            dangerouslySetInnerHTML={{ __html: themeToCss(theme) }}
+          />
+        ) : null}
+        <ThemeProvider>
+          <DirectionProvider direction={direction}>
+            <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          </DirectionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

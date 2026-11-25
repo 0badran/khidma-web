@@ -1,5 +1,8 @@
 {
   "HomePage": {
     "title": "مرحبا بالعالم!"
+  },
+  "ThemeToggle": {
+    "toggle": "تبديل الوضع الداكن"
   }
 }
