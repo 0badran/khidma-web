@@ -9,6 +9,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SecurityForms } from "@/components/security-forms";
 import { Field, selectClass } from "@/components/form-field";
 import {
   deleteAccountAction,
@@ -299,6 +300,8 @@ export function AccountForm({
           {pending ? t("saving") : t("save")}
         </Button>
       </form>
+
+      <SecurityForms />
 
       <section className="flex flex-col gap-3 border border-destructive/30 p-4">
         <h2 className="font-bold text-destructive">{t("deleteTitle")}</h2>

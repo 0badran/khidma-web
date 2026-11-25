@@ -73,7 +73,8 @@
     "submitting": "Logging in...",
     "failed": "We could not log you in. Please try again.",
     "noAccount": "No account yet?",
-    "createAccount": "Sign up"
+    "createAccount": "Sign up",
+    "forgot": "Forgot your password?"
   },
   "Register": {
     "title": "Create an account",
@@ -142,5 +143,39 @@
     "sending": "Sending...",
     "thanks": "Thanks for your rating.",
     "failed": "We could not send your rating. Please try again."
+  },
+  "Forgot": {
+    "title": "Reset password",
+    "email": "Email",
+    "sendCode": "Send code",
+    "sending": "Sending...",
+    "codeSent": "If the email is registered we sent you a code. Check spam if you do not see it.",
+    "otp": "Verification code",
+    "newPassword": "New password",
+    "reset": "Change password",
+    "saving": "Saving...",
+    "back": "Back",
+    "failed": "Something went wrong. Please try again.",
+    "done": "Your password was changed. Log in with it.",
+    "toLogin": "Go to login"
+  },
+  "Security": {
+    "title": "Security",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordTitle": "Change password",
+    "passwordChanged": "Password changed.",
+    "emailTitle": "Change email",
+    "newEmail": "New email",
+    "otp": "Verification code",
+    "sendCode": "Send code",
+    "confirm": "Confirm",
+    "codeSent": "We sent a code to the new email.",
+    "emailChanged": "Email changed.",
+    "phoneTitle": "Change phone number",
+    "newPhone": "New phone number",
+    "phoneChanged": "Phone number changed.",
+    "change": "Change",
+    "failed": "Something went wrong. Please try again."
   }
 }

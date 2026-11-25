@@ -50,6 +50,9 @@ export function LoginForm() {
           dir="ltr"
         />
       </Field>
+      <Link href="/forgot-password" className="w-fit text-sm text-primary underline-offset-4 hover:underline">
+        {t("forgot")}
+      </Link>
       {formError ? (
         <p role="alert" className="text-sm text-destructive">
           {formError}

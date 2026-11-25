@@ -110,3 +110,46 @@ export async function submitRatingAction(
   revalidatePath(`/${locale}/providers/${providerId}`);
   return { ok: true };
 }
+
+type SimpleResult = Promise<ActionResult>;
+
+async function simplePost(
+  path: string,
+  body: Record<string, unknown>,
+  fallback: string,
+  refresh = false,
+): SimpleResult {
+  const locale = await getLocale();
+  const out = await authed("POST", path, body, locale, fallback);
+  if (!out.ok) return { ok: false, message: out.message, fields: out.fields };
+  if (refresh) revalidatePath("/", "layout");
+  return { ok: true, message: (out.data as { message?: string }).message };
+}
+
+export async function changePasswordAction(
+  body: { currentPassword: string; newPassword: string },
+  fallback: string,
+): SimpleResult {
+  return simplePost("/api/auth/change-password", body, fallback);
+}
+
+export async function changeEmailRequestAction(
+  body: { newEmail: string; password: string },
+  fallback: string,
+): SimpleResult {
+  return simplePost("/api/auth/change-email/request-otp", body, fallback);
+}
+
+export async function changeEmailAction(
+  body: { newEmail: string; otp: string },
+  fallback: string,
+): SimpleResult {
+  return simplePost("/api/auth/change-email", body, fallback, true);
+}
+
+export async function changePhoneAction(
+  body: { newPhone: string; password: string },
+  fallback: string,
+): SimpleResult {
+  return simplePost("/api/auth/change-phone", body, fallback, true);
+}

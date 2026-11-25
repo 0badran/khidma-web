@@ -97,3 +97,23 @@ export async function logoutAction() {
   await clearSessionCookies();
   return redirect({ href: "/", locale });
 }
+
+export async function forgotPasswordRequestAction(
+  email: string,
+  fallback: string,
+): Promise<ActionResult> {
+  const locale = await getLocale();
+  const out = await post("/api/auth/forgot-password/request-otp", { email }, locale);
+  if (!out?.res.ok) return failure(out, fallback);
+  return { ok: true, message: (out.data as { message?: string }).message };
+}
+
+export async function forgotPasswordResetAction(
+  body: { email: string; otp: string; newPassword: string },
+  fallback: string,
+): Promise<ActionResult> {
+  const locale = await getLocale();
+  const out = await post("/api/auth/forgot-password/reset", body, locale);
+  if (!out?.res.ok) return failure(out, fallback);
+  return { ok: true, message: (out.data as { message?: string }).message };
+}
