@@ -130,7 +130,9 @@
     "deleteBody": "Your account is hidden and deleted for good after 30 days without signing in. Signing in again before that restores it.",
     "delete": "Delete account",
     "deleteConfirm": "Yes, delete my account",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "inactive": "Your account is currently deactivated and hidden from customers.",
+    "viewPublic": "View your public page"
   },
   "Rating": {
     "title": "Rate this provider",

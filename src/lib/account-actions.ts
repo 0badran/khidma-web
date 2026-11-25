@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { clearSessionCookies, getAccessToken } from "@/lib/session";
+import { clearSessionCookies, getAccessToken, refreshSession } from "@/lib/session";
 import type { ActionResult } from "@/lib/auth-actions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -15,19 +15,30 @@ async function authed(
   locale: string,
   fallback: string,
 ) {
-  const token = await getAccessToken();
+  let token = (await getAccessToken()) ?? (await refreshSession());
   if (!token) return { ok: false as const, message: fallback, expired: true };
-  try {
-    const res = await fetch(`${API_URL}${path}`, {
+
+  const send = async (accessToken: string) =>
+    fetch(`${API_URL}${path}`, {
       method,
       headers: {
         "Content-Type": "application/json",
         "Accept-Language": locale,
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
+
+  try {
+    let res = await send(token);
+    if (res.status === 401) {
+      const renewed = await refreshSession();
+      if (renewed) {
+        token = renewed;
+        res = await send(token);
+      }
+    }
     const data = await res.json().catch(() => ({}));
     if (res.ok) return { ok: true as const, data };
     const error = (data as { error?: { message?: string; fields?: Record<string, string[]> } })
@@ -86,7 +97,7 @@ export async function submitRatingAction(
   fallback: string,
 ): Promise<ActionResult> {
   const locale = await getLocale();
-  const token = await getAccessToken();
+  const token = (await getAccessToken()) ?? (await refreshSession()) ?? undefined;
   try {
     const res = await fetch(`${API_URL}/api/providers/${providerId}/ratings`, {
       method: "POST",

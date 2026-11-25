@@ -89,3 +89,31 @@ export async function getMe(): Promise<{
     return null;
   }
 }
+
+// Used by server actions: the access token may have expired while the user
+// sat on a form. Trade the refresh token for a new pair and store it.
+export async function refreshSession(): Promise<string | null> {
+  const refresh = await getRefreshToken();
+  if (!refresh || !API_URL) return null;
+  try {
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken: refresh }),
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      if (res.status === 401) await clearSessionCookies();
+      return null;
+    }
+    const tokens = (await res.json()) as {
+      token: string;
+      refreshToken: string;
+      expiresIn: number;
+    };
+    await setSessionCookies(tokens);
+    return tokens.token;
+  } catch {
+    return null;
+  }
+}
