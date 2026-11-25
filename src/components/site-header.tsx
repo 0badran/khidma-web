@@ -1,5 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { Suspense } from "react";
+import { UserMenu } from "@/components/user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export async function SiteHeader() {
@@ -10,8 +12,11 @@ export async function SiteHeader() {
         <Link href="/" className="text-lg font-bold">
           {t("brand")}
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex items-center gap-2 text-sm">
           <Link href="/providers">{t("providers")}</Link>
+          <Suspense>
+            <UserMenu />
+          </Suspense>
           <ThemeToggle />
         </nav>
       </div>

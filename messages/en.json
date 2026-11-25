@@ -4,7 +4,10 @@
   },
   "Header": {
     "brand": "Khidma",
-    "providers": "Providers"
+    "providers": "Providers",
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out"
   },
   "Home": {
     "title": "Book any home service with ease",
@@ -51,5 +54,53 @@
   "Maintenance": {
     "title": "Under maintenance",
     "body": "We will be back soon. Thanks for your patience."
+  },
+  "Validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email",
+    "minName": "Name must be 2 to 100 characters",
+    "phone": "Phone must be 8 to 15 digits",
+    "password": "Password must be 8 to 128 characters",
+    "otp": "The code is 6 digits",
+    "bio": "Bio is up to 1000 characters",
+    "years": "Years of experience must be 0 to 60"
+  },
+  "Login": {
+    "title": "Log in",
+    "identifier": "Email or phone number",
+    "password": "Password",
+    "submit": "Log in",
+    "submitting": "Logging in...",
+    "failed": "We could not log you in. Please try again.",
+    "noAccount": "No account yet?",
+    "createAccount": "Sign up"
+  },
+  "Register": {
+    "title": "Create an account",
+    "role": "Account type",
+    "customer": "Customer",
+    "provider": "Provider",
+    "email": "Email",
+    "sendCode": "Send verification code",
+    "sending": "Sending...",
+    "codeSent": "We sent a verification code to your email. Check spam if you do not see it.",
+    "otp": "Verification code",
+    "name": "Name",
+    "phone": "Phone number",
+    "birthDate": "Birth date",
+    "password": "Password",
+    "category": "Category",
+    "governorate": "Governorate",
+    "city": "City",
+    "choose": "Choose",
+    "years": "Years of experience (optional)",
+    "bio": "Bio (optional)",
+    "photoLater": "You can add your photo after creating the account.",
+    "submit": "Create account",
+    "submitting": "Creating...",
+    "back": "Back",
+    "failed": "Something went wrong. Please try again.",
+    "haveAccount": "Already have an account?",
+    "login": "Log in"
   }
 }
