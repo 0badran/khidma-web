@@ -197,6 +197,7 @@
   },
   "LocaleSwitcher": {
     "label": "التبديل إلى الإنجليزية",
-    "name": "English"
+    "name": "English",
+    "short": "E"
   }
 }

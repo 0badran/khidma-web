@@ -44,7 +44,7 @@ export function LocaleSwitcher() {
     >
       <Translate />
       <span className="sm:hidden" aria-hidden="true">
-        {Array.from(t("name"))[0]}
+        {t("short")}
       </span>
       <span className="hidden sm:inline">{t("name")}</span>
     </Button>

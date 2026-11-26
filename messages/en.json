@@ -197,6 +197,7 @@
   },
   "LocaleSwitcher": {
     "label": "Switch to Arabic",
-    "name": "العربية"
+    "name": "العربية",
+    "short": "ع"
   }
 }
