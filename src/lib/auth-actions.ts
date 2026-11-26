@@ -1,6 +1,6 @@
 "use server";
 
-import { getLocale } from "next-intl/server";
+import { getActionLocale } from "@/lib/action-locale";
 import { redirect } from "@/i18n/navigation";
 import {
   clearSessionCookies,
@@ -50,7 +50,7 @@ export async function requestRegisterOtp(
   email: string,
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await post("/api/auth/register/request-otp", { email }, locale);
   if (!out?.res.ok) return failure(out, fallback);
   return { ok: true, message: (out.data as { message?: string }).message };
@@ -60,7 +60,7 @@ export async function registerAction(
   body: Record<string, unknown>,
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await post("/api/auth/register", body, locale);
   if (!out?.res.ok) return failure(out, fallback);
   await setSessionCookies(out.data as Tokens);
@@ -71,7 +71,7 @@ export async function loginAction(
   body: { identifier: string; password: string },
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await post("/api/auth/login", body, locale);
   if (!out?.res.ok) return failure(out, fallback);
   await setSessionCookies(out.data as Tokens);
@@ -79,7 +79,7 @@ export async function loginAction(
 }
 
 export async function logoutAction() {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const [access, refresh] = await Promise.all([getAccessToken(), getRefreshToken()]);
   try {
     await fetch(`${API_URL}/api/auth/logout`, {
@@ -102,7 +102,7 @@ export async function forgotPasswordRequestAction(
   email: string,
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await post("/api/auth/forgot-password/request-otp", { email }, locale);
   if (!out?.res.ok) return failure(out, fallback);
   return { ok: true, message: (out.data as { message?: string }).message };
@@ -112,7 +112,7 @@ export async function forgotPasswordResetAction(
   body: { email: string; otp: string; newPassword: string },
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await post("/api/auth/forgot-password/reset", body, locale);
   if (!out?.res.ok) return failure(out, fallback);
   return { ok: true, message: (out.data as { message?: string }).message };

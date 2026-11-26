@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getLocale } from "next-intl/server";
+import { getActionLocale } from "@/lib/action-locale";
 import { redirect } from "@/i18n/navigation";
 import { clearSessionCookies, getAccessToken, refreshSession } from "@/lib/session";
 import type { ActionResult } from "@/lib/auth-actions";
@@ -59,7 +59,7 @@ export async function updateProfileAction(
   body: Record<string, unknown>,
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const path = role === "provider" ? "/api/providers/me" : "/api/customers/me";
   const out = await authed("PATCH", path, body, locale, fallback);
   if (!out.ok) return { ok: false, message: out.message, fields: out.fields };
@@ -77,14 +77,14 @@ export type UploadSignature = {
 export async function signPhotoUpload(
   fallback: string,
 ): Promise<{ ok: true; sign: UploadSignature } | { ok: false; message: string }> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await authed("POST", "/api/uploads/sign", { purpose: "provider" }, locale, fallback);
   if (!out.ok) return { ok: false, message: out.message };
   return { ok: true, sign: out.data as UploadSignature };
 }
 
 export async function deleteAccountAction(fallback: string): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await authed("DELETE", "/api/auth/me", undefined, locale, fallback);
   if (!out.ok) return { ok: false, message: out.message };
   await clearSessionCookies();
@@ -96,7 +96,7 @@ export async function submitRatingAction(
   body: { stars: number; comment?: string; name?: string; phone?: string },
   fallback: string,
 ): Promise<ActionResult> {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const token = (await getAccessToken()) ?? (await refreshSession()) ?? undefined;
   try {
     const res = await fetch(`${API_URL}/api/providers/${providerId}/ratings`, {
@@ -130,7 +130,7 @@ async function simplePost(
   fallback: string,
   refresh = false,
 ): SimpleResult {
-  const locale = await getLocale();
+  const locale = await getActionLocale();
   const out = await authed("POST", path, body, locale, fallback);
   if (!out.ok) return { ok: false, message: out.message, fields: out.fields };
   if (refresh) revalidatePath("/", "layout");
