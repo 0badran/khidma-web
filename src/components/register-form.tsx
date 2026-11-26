@@ -66,7 +66,7 @@ export function RegisterForm({
       name: z.string().min(2, tv("minName")).max(100, tv("minName")),
       phone: z.string().regex(/^\+?\d{8,15}$/, tv("phone")),
       password: z.string().min(8, tv("password")).max(128, tv("password")),
-      birthDate: z.string().min(1, tv("required")),
+      birthDate: z.string(),
       otp: z.string(),
       categoryId: z.string(),
       governorateId: z.string(),
@@ -74,6 +74,7 @@ export function RegisterForm({
     })
     .superRefine((v, ctx) => {
       if (v.role !== "provider") return;
+      if (!v.birthDate) ctx.addIssue({ code: "custom", path: ["birthDate"], message: tv("required") });
       for (const key of ["categoryId", "cityId"] as const) {
         if (!v[key]) ctx.addIssue({ code: "custom", path: [key], message: tv("required") });
       }
@@ -171,7 +172,8 @@ export function RegisterForm({
 
   // Stage 3: a customer creates the account here, a provider continues.
   const submitDetails = async () => {
-    const fields: (keyof Values)[] = ["name", "phone", "birthDate", "password"];
+    const fields: (keyof Values)[] = ["name", "phone", "password"];
+    if (getValues("role") === "provider") fields.push("birthDate");
     if (!(await trigger(fields))) return;
     if (getValues("role") === "provider") {
       setStep("work");
@@ -193,9 +195,9 @@ export function RegisterForm({
       phone: v.phone,
       email: v.email,
       password: v.password,
-      birthDate: v.birthDate,
       otp: v.otp,
     };
+    if (v.role === "provider" || v.birthDate) body.birthDate = v.birthDate;
     if (v.role === "provider") {
       body.categoryId = Number(v.categoryId);
       body.cityId = Number(v.cityId);
@@ -248,6 +250,20 @@ export function RegisterForm({
         className="flex flex-col gap-4"
       >
         {progress}
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("role")}</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {(["customer", "provider"] as const).map((value) => (
+                <label
+                  key={value}
+                  className="flex cursor-pointer items-center gap-2 border p-3 text-sm has-checked:border-primary has-checked:bg-muted"
+                >
+                  <input type="radio" value={value} disabled={codeOpen} {...register("role")} />
+                  {t(value)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
         <Field required label={t("email")} error={errors.email?.message}>
           <Input
             type="email"
@@ -397,27 +413,13 @@ export function RegisterForm({
       className="flex flex-col gap-4"
     >
       {progress}
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">{t("role")}</legend>
-        <div className="grid grid-cols-2 gap-2">
-          {(["customer", "provider"] as const).map((value) => (
-            <label
-              key={value}
-              className="flex cursor-pointer items-center gap-2 border p-3 text-sm has-checked:border-primary has-checked:bg-muted"
-            >
-              <input type="radio" value={value} {...register("role")} />
-              {t(value)}
-            </label>
-          ))}
-        </div>
-      </fieldset>
       <Field required label={t("name")} error={errors.name?.message}>
         <Input {...register("name")} autoComplete="name" />
       </Field>
       <Field required label={t("phone")} error={errors.phone?.message}>
         <Input type="tel" {...register("phone")} autoComplete="tel" dir="ltr" />
       </Field>
-      <Field required label={t("birthDate")} error={errors.birthDate?.message}>
+      <Field required={isProvider} label={isProvider ? t("birthDate") : t("birthDateOptional")} error={errors.birthDate?.message}>
         <Input
           type="date"
           {...register("birthDate")}

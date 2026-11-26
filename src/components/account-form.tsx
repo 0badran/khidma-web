@@ -63,7 +63,7 @@ export function AccountForm({
   const schema = z
     .object({
       name: z.string().min(2, tv("minName")).max(100, tv("minName")),
-      birthDate: z.string().min(1, tv("required")),
+      birthDate: z.string(),
       categoryId: z.string(),
       governorateId: z.string(),
       cityId: z.string(),
@@ -72,6 +72,7 @@ export function AccountForm({
     })
     .superRefine((v, ctx) => {
       if (!isProvider) return;
+      if (!v.birthDate) ctx.addIssue({ code: "custom", path: ["birthDate"], message: tv("required") });
       for (const key of ["categoryId", "cityId"] as const) {
         if (!v[key]) ctx.addIssue({ code: "custom", path: [key], message: tv("required") });
       }
@@ -117,7 +118,7 @@ export function AccountForm({
 
   const onSubmit = (v: Values) => {
     setMessage(null);
-    const body: Record<string, unknown> = { name: v.name, birthDate: v.birthDate };
+    const body: Record<string, unknown> = { name: v.name, birthDate: v.birthDate || null };
     if (isProvider) {
       body.categoryId = Number(v.categoryId);
       body.cityId = Number(v.cityId);
@@ -236,7 +237,7 @@ export function AccountForm({
         <Field required label={t("name")} error={errors.name?.message}>
           <Input {...register("name")} />
         </Field>
-        <Field required label={t("birthDate")} error={errors.birthDate?.message}>
+        <Field required={isProvider} label={isProvider ? t("birthDate") : t("birthDateOptional")} error={errors.birthDate?.message}>
           <Input type="date" {...register("birthDate")} dir="ltr" />
         </Field>
 
