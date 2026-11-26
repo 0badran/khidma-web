@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { Suspense } from "react";
 import { UserMenu } from "@/components/user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 export async function SiteHeader() {
   const t = await getTranslations("Header");
@@ -16,6 +17,9 @@ export async function SiteHeader() {
           <Link href="/providers">{t("providers")}</Link>
           <Suspense>
             <UserMenu />
+          </Suspense>
+          <Suspense>
+            <LocaleSwitcher />
           </Suspense>
           <ThemeToggle />
         </nav>

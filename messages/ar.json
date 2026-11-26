@@ -184,5 +184,9 @@
     "label": "عروض الخدمات",
     "cta": "ابحث عن فني",
     "goTo": "الصورة {number}"
+  },
+  "LocaleSwitcher": {
+    "label": "التبديل إلى الإنجليزية",
+    "name": "English"
   }
 }

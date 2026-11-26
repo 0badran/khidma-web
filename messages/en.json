@@ -184,5 +184,9 @@
     "label": "Featured services",
     "cta": "Find a technician",
     "goTo": "Slide {number}"
+  },
+  "LocaleSwitcher": {
+    "label": "Switch to Arabic",
+    "name": "العربية"
   }
 }
