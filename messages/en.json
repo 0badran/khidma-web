@@ -11,9 +11,6 @@
   },
   "Home": {
     "title": "Book any home service with ease",
-    "subtitle": "Verified providers in every city in Egypt. Search and call directly.",
-    "searchPlaceholder": "Search by provider name",
-    "search": "Search",
     "categories": "Categories",
     "topRated": "Top rated"
   },

@@ -2,8 +2,6 @@ import Image from "next/image";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Hero } from "@/components/hero";
 import { ProviderCard } from "@/components/provider-card";
 import { getCategories, getProviders, MaintenanceError, pick } from "@/lib/api";
@@ -26,23 +24,9 @@ export default async function HomePage() {
 
   return (
     <main className="flex w-full flex-1 flex-col">
+      <h1 className="sr-only">{t("title")}</h1>
       <Hero />
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 p-4 py-8">
-        <section className="flex flex-col gap-4">
-          <h1 className="text-3xl font-bold">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
-          <form action={`/${locale}/providers`} className="flex gap-2">
-            <Input
-              name="q"
-              placeholder={t("searchPlaceholder")}
-              className="h-9"
-            />
-            <Button type="submit" size="lg">
-              {t("search")}
-            </Button>
-          </form>
-        </section>
-
         <section className="flex flex-col gap-4">
           <h2 className="text-xl font-bold">{t("categories")}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
