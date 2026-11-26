@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/form-select";
 import { LocationFilter } from "@/components/location-filter";
 import { ProviderCard } from "@/components/provider-card";
 import {
@@ -14,8 +15,6 @@ import {
 } from "@/lib/api";
 
 const PAGE_SIZE = 12;
-const selectClass =
-  "h-9 w-full border border-input bg-background px-2 text-xs outline-none focus-visible:border-ring";
 
 export default async function ProvidersPage({
   searchParams,
@@ -83,19 +82,20 @@ export default async function ProvidersPage({
       <h1 className="text-2xl font-bold">{t("title")}</h1>
       <form className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto]">
         <Input name="q" defaultValue={q} placeholder={t("searchPlaceholder")} className="h-9" />
-        <select name="categoryId" defaultValue={categoryId ?? ""} className={selectClass} aria-label={t("category")}>
-          <option value="">{t("allCategories")}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {pick(locale, c.nameAr, c.nameEn)}
-            </option>
-          ))}
-        </select>
+        <FormSelect
+          name="categoryId"
+          defaultValue={categoryId ?? ""}
+          ariaLabel={t("category")}
+          className="h-9 w-full sm:min-w-40"
+          options={[
+            { value: "", label: t("allCategories") },
+            ...categories.map((c) => ({ value: String(c.id), label: pick(locale, c.nameAr, c.nameEn) })),
+          ]}
+        />
         <LocationFilter
           governorates={governorates}
           initialGovernorateId={governorateId ?? ""}
           initialCityId={cityId ?? ""}
-          selectClass={selectClass}
         />
         <Button type="submit" size="lg">
           {t("apply")}

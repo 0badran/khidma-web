@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CityCombobox } from "@/components/city-combobox";
+import { FormSelect } from "@/components/form-select";
 
 type Named = { id: number; nameAr: string; nameEn: string };
 
@@ -10,37 +11,34 @@ export function LocationFilter({
   governorates,
   initialGovernorateId,
   initialCityId,
-  selectClass,
 }: {
   governorates: Named[];
   initialGovernorateId: string;
   initialCityId: string;
-  selectClass: string;
 }) {
   const t = useTranslations("Providers");
   const locale = useLocale();
   const [governorateId, setGovernorateId] = useState(initialGovernorateId);
   const [cityId, setCityId] = useState(initialCityId);
 
+  const items = [
+    { value: "", label: t("allGovernorates") },
+    ...governorates.map((g) => ({ value: String(g.id), label: locale === "ar" ? g.nameAr : g.nameEn })),
+  ];
+
   return (
     <>
-      <select
+      <FormSelect
         name="governorateId"
         value={governorateId}
-        onChange={(e) => {
-          setGovernorateId(e.target.value);
-          if (e.target.value && cityId) setCityId("");
+        options={items}
+        ariaLabel={t("governorate")}
+        className="h-9 w-full sm:min-w-40"
+        onValueChange={(next) => {
+          setGovernorateId(next);
+          if (next && cityId) setCityId("");
         }}
-        className={selectClass}
-        aria-label={t("governorate")}
-      >
-        <option value="">{t("allGovernorates")}</option>
-        {governorates.map((g) => (
-          <option key={g.id} value={g.id}>
-            {locale === "ar" ? g.nameAr : g.nameEn}
-          </option>
-        ))}
-      </select>
+      />
       <input type="hidden" name="cityId" value={cityId} />
       <CityCombobox
         cityId={cityId}

@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SecurityForms } from "@/components/security-forms";
 import { CityCombobox } from "@/components/city-combobox";
-import { Field, selectClass } from "@/components/form-field";
+import { Field } from "@/components/form-field";
+import { FormSelect } from "@/components/form-select";
 import {
   deleteAccountAction,
   signPhotoUpload,
@@ -105,6 +106,7 @@ export function AccountForm({
     },
   });
 
+  const categoryId = useWatch({ control, name: "categoryId" });
   const governorateId = useWatch({ control, name: "governorateId" });
   const cityId = useWatch({ control, name: "cityId" });
 
@@ -249,31 +251,29 @@ export function AccountForm({
         {isProvider ? (
           <>
             <Field required label={t("category")} error={errors.categoryId?.message}>
-              <select {...register("categoryId")} className={selectClass}>
-                <option value="">{t("choose")}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {name(c)}
-                  </option>
-                ))}
-              </select>
+              <FormSelect
+            value={categoryId}
+            ariaLabel={t("category")}
+            onValueChange={(next) => setValue("categoryId", next, { shouldValidate: true })}
+            options={[
+              { value: "", label: t("choose") },
+              ...categories.map((c) => ({ value: String(c.id), label: name(c) })),
+            ]}
+          />
             </Field>
             <Field label={t("governorateOptional")}>
-              <select
-                {...register("governorateId", {
-                  onChange: (e) => {
-                    if (e.target.value && getValues("cityId")) setValue("cityId", "");
-                  },
-                })}
-                className={selectClass}
-              >
-                <option value="">{t("allGovernorates")}</option>
-                {governorates.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {name(g)}
-                  </option>
-                ))}
-              </select>
+              <FormSelect
+            value={governorateId}
+            ariaLabel={t("governorateOptional")}
+            onValueChange={(next) => {
+              setValue("governorateId", next);
+              if (next && getValues("cityId")) setValue("cityId", "");
+            }}
+            options={[
+              { value: "", label: t("allGovernorates") },
+              ...governorates.map((g) => ({ value: String(g.id), label: name(g) })),
+            ]}
+          />
             </Field>
             <Field required label={t("city")} error={errors.cityId?.message}>
               <CityCombobox

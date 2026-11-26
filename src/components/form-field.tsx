@@ -27,5 +27,3 @@ export function Field({
   );
 }
 
-export const selectClass =
-  "h-8 w-full border border-input bg-transparent px-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:opacity-50";
