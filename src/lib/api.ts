@@ -62,6 +62,7 @@ export type Rating = {
   stars: number;
   comment: string | null;
   createdAt: string;
+  mine: boolean;
 };
 
 export type ProviderFilters = {
@@ -133,11 +134,19 @@ export async function getProvider(locale: string, id: string) {
   return data?.provider ?? null;
 }
 
-export async function getRatings(locale: string, id: string) {
-  const data = await apiGet<{ ratings: Rating[] }>(
-    `/api/providers/${encodeURIComponent(id)}/ratings`,
-    locale,
-  );
+export async function getRatings(locale: string, id: string, token?: string) {
+  const path = `/api/providers/${encodeURIComponent(id)}/ratings`;
+  if (token) {
+    // The "mine" flag depends on who is signed in, so this read is never cached.
+    if (!API_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+    const res = await fetch(`${API_URL}${path}`, {
+      headers: { "Accept-Language": locale, Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (res.status === 503) throw new MaintenanceError();
+    if (res.ok) return ((await res.json()) as { ratings: Rating[] }).ratings ?? [];
+  }
+  const data = await apiGet<{ ratings: Rating[] }>(path, locale);
   return data?.ratings ?? [];
 }
 

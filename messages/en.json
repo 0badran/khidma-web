@@ -163,7 +163,11 @@
     "submit": "Send rating",
     "sending": "Sending...",
     "thanks": "Thanks for your rating.",
-    "failed": "We could not send your rating. Please try again."
+    "failed": "We could not send your rating. Please try again.",
+    "delete": "Delete my rating",
+    "deleteConfirm": "Yes, delete my rating",
+    "cancel": "Cancel",
+    "deleteFailed": "We could not delete your rating. Please try again."
   },
   "Forgot": {
     "title": "Reset password",

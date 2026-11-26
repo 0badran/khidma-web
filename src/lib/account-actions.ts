@@ -122,6 +122,24 @@ export async function submitRatingAction(
   return { ok: true };
 }
 
+export async function deleteRatingAction(
+  providerId: number,
+  ratingId: number,
+  fallback: string,
+): Promise<ActionResult> {
+  const locale = await getActionLocale();
+  const out = await authed(
+    "DELETE",
+    `/api/providers/${providerId}/ratings/${ratingId}`,
+    undefined,
+    locale,
+    fallback,
+  );
+  if (!out.ok) return { ok: false, message: out.message };
+  revalidatePath(`/${locale}/providers/${providerId}`);
+  return { ok: true };
+}
+
 type SimpleResult = Promise<ActionResult>;
 
 async function simplePost(

@@ -4,8 +4,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { DeleteRatingButton } from "@/components/delete-rating-button";
 import { RatingForm } from "@/components/rating-form";
-import { getSessionUser } from "@/lib/session";
+import { getAccessToken, getSessionUser } from "@/lib/session";
 import { StarRating } from "@/components/star-rating";
 import { getProvider, getRatings, MaintenanceError, pick } from "@/lib/api";
 import { PhoneIcon, WhatsappLogoIcon, StarIcon } from "@phosphor-icons/react/dist/ssr";
@@ -24,7 +25,7 @@ export default async function ProviderPage({
   try {
     [provider, ratings] = await Promise.all([
       getProvider(locale, id),
-      getRatings(locale, id),
+      getRatings(locale, id, signedIn ? await getAccessToken() : undefined),
     ]);
   } catch (error) {
     if (error instanceof MaintenanceError) {
@@ -100,6 +101,9 @@ export default async function ProviderPage({
                 </span>
               </div>
               {rating.comment ? <p>{rating.comment}</p> : null}
+              {rating.mine ? (
+                <DeleteRatingButton providerId={provider.id} ratingId={rating.id} />
+              ) : null}
             </div>
           ))
         )}
