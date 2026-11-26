@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/account-actions";
 
 type Option = { id: number; nameAr: string; nameEn: string };
+type City = Option & { governorateId: number };
 
 export type AccountData = {
   role: "customer" | "provider";
@@ -39,12 +40,12 @@ export function AccountForm({
   data,
   categories,
   governorates,
-  initialCities,
+  cities,
 }: {
   data: AccountData;
   categories: Option[];
   governorates: Option[];
-  initialCities: Option[];
+  cities: City[];
 }) {
   const t = useTranslations("Account");
   const tv = useTranslations("Validation");
@@ -52,7 +53,6 @@ export function AccountForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [cities, setCities] = useState<Option[]>(initialCities);
   const [photoUrl, setPhotoUrl] = useState(data.provider?.photoUrl ?? null);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -89,6 +89,9 @@ export function AccountForm({
     register,
     handleSubmit,
     setError,
+    getValues,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -96,25 +99,25 @@ export function AccountForm({
       name: data.name,
       birthDate: data.birthDate,
       categoryId: String(data.provider?.categoryId ?? ""),
-      governorateId: String(data.provider?.governorateId ?? ""),
+      governorateId: "",
       cityId: String(data.provider?.cityId ?? ""),
       yearsOfExperience: data.provider?.yearsOfExperience?.toString() ?? "",
       bio: data.provider?.bio ?? "",
     },
   });
 
-  const loadCities = async (governorateId: string) => {
-    setCities([]);
-    if (!governorateId) return;
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/governorates/${governorateId}/cities`,
-      );
-      if (res.ok) setCities(((await res.json()) as { cities: Option[] }).cities);
-    } catch {
-      setCities([]);
-    }
-  };
+  // All cities are listed. The optional governorate only narrows the list.
+  const governorateId = useWatch({ control, name: "governorateId" });
+  const governorateName = new Map(governorates.map((g) => [g.id, name(g)]));
+  const cityOptions = cities
+    .filter((c) => !governorateId || String(c.governorateId) === governorateId)
+    .map((c) => ({
+      id: c.id,
+      label: governorateId
+        ? name(c)
+        : `${name(c)}, ${governorateName.get(c.governorateId) ?? ""}`,
+    }))
+    .sort((x, y) => x.label.localeCompare(y.label, locale));
 
   const onSubmit = (v: Values) => {
     setMessage(null);
@@ -253,12 +256,19 @@ export function AccountForm({
                 ))}
               </select>
             </Field>
-            <Field label={t("governorate")}>
+            <Field label={t("governorateOptional")}>
               <select
-                {...register("governorateId", { onChange: (e) => loadCities(e.target.value) })}
+                {...register("governorateId", {
+                  onChange: (e) => {
+                    const city = cities.find((c) => String(c.id) === getValues("cityId"));
+                    if (e.target.value && city && String(city.governorateId) !== e.target.value) {
+                      setValue("cityId", "");
+                    }
+                  },
+                })}
                 className={selectClass}
               >
-                <option value="">{t("choose")}</option>
+                <option value="">{t("allGovernorates")}</option>
                 {governorates.map((g) => (
                   <option key={g.id} value={g.id}>
                     {name(g)}
@@ -267,11 +277,11 @@ export function AccountForm({
               </select>
             </Field>
             <Field required label={t("city")} error={errors.cityId?.message}>
-              <select {...register("cityId")} className={selectClass} disabled={cities.length === 0}>
+              <select {...register("cityId")} className={selectClass}>
                 <option value="">{t("choose")}</option>
-                {cities.map((c) => (
+                {cityOptions.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {name(c)}
+                    {c.label}
                   </option>
                 ))}
               </select>

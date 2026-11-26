@@ -115,6 +115,8 @@
     "allGovernorates": "All governorates"
   },
   "Account": {
+    "governorateOptional": "Governorate (optional)",
+    "allGovernorates": "All governorates",
     "title": "My account",
     "email": "Email",
     "phone": "Mobile number",

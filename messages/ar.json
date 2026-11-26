@@ -115,6 +115,8 @@
     "allGovernorates": "كل المحافظات"
   },
   "Account": {
+    "governorateOptional": "المحافظة (اختياري)",
+    "allGovernorates": "كل المحافظات",
     "title": "حسابي",
     "email": "الإيميل",
     "phone": "رقم الموبايل",

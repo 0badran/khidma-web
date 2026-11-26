@@ -1,10 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { AccountForm } from "@/components/account-form";
-import { getCategories, getGovernorates } from "@/lib/api";
+import { getAllCities, getCategories, getGovernorates } from "@/lib/api";
 import { getMe } from "@/lib/session";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default async function AccountPage() {
   const locale = await getLocale();
@@ -19,14 +17,7 @@ export default async function AccountPage() {
     getGovernorates(locale),
   ]);
 
-  let initialCities: { id: number; nameAr: string; nameEn: string }[] = [];
-  if (me.provider?.governorateId) {
-    const res = await fetch(
-      `${API_URL}/api/governorates/${me.provider.governorateId}/cities`,
-      { next: { revalidate: 3600 } },
-    );
-    if (res.ok) initialCities = ((await res.json()) as { cities: typeof initialCities }).cities;
-  }
+  const cities = me.provider ? await getAllCities(locale, governorates) : [];
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 p-4 py-8">
@@ -54,7 +45,7 @@ export default async function AccountPage() {
         }}
         categories={categories}
         governorates={governorates}
-        initialCities={initialCities}
+        cities={cities}
       />
     </main>
   );
