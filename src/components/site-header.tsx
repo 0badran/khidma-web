@@ -9,11 +9,11 @@ export async function SiteHeader() {
   const t = await getTranslations("Header");
   return (
     <header className="border-b">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 p-4">
+      <div className="mx-auto flex w-full max-w-5xl items-center flex-wrap justify-between gap-x-4 gap-y-2 p-4">
         <Link href="/" className="text-lg font-bold">
           {t("brand")}
         </Link>
-        <nav className="flex items-center gap-2 text-sm">
+        <nav className="flex flex-wrap items-center gap-1 text-sm sm:gap-2">
           <Link href="/providers">{t("providers")}</Link>
           <Suspense>
             <UserMenu />

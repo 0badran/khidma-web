@@ -63,7 +63,7 @@ export default async function ProvidersPage({
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 py-8">
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <form className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
         <Input name="q" defaultValue={q} placeholder={t("searchPlaceholder")} className="h-9" />
         <select name="categoryId" defaultValue={categoryId ?? ""} className={selectClass} aria-label={t("category")}>
           <option value="">{t("allCategories")}</option>
@@ -89,7 +89,7 @@ export default async function ProvidersPage({
       {result.providers.length === 0 ? (
         <p className="py-12 text-center text-muted-foreground">{t("empty")}</p>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {result.providers.map((provider) => (
             <ProviderCard key={provider.id} provider={provider} />
           ))}
