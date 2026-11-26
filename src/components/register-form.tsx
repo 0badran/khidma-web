@@ -48,6 +48,14 @@ export function RegisterForm({
   );
   const [step, setStep] = useState<Step>(saved?.step ?? "email");
   const [formError, setFormError] = useState<string | null>(null);
+  const [cooldown, setCooldown] = useState(0);
+  const [resent, setResent] = useState(false);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [cooldown]);
 
   const name = (o: Option) => (locale === "ar" ? o.nameAr : o.nameEn);
 
@@ -79,6 +87,7 @@ export function RegisterForm({
     getValues,
     setValue,
     setError,
+    clearErrors,
     control,
     formState: { errors },
   } = useForm<Values>({
@@ -120,7 +129,25 @@ export function RegisterForm({
         return;
       }
       setStep("code");
+      setCooldown(60);
+      setResent(false);
       setTimeout(() => document.querySelector<HTMLInputElement>("input[name=otp]")?.focus(), 50);
+    });
+  };
+
+  const resendCode = () => {
+    if (cooldown > 0) return;
+    startTransition(async () => {
+      setFormError(null);
+      clearErrors("otp");
+      const result = await requestRegisterOtp(getValues("email"), t("failed"));
+      if (!result.ok) {
+        setFormError(result.message);
+        return;
+      }
+      setValue("otp", "");
+      setResent(true);
+      setCooldown(60);
     });
   };
 
@@ -260,6 +287,11 @@ export function RegisterForm({
             {formError}
           </p>
         ) : null}
+        {codeOpen && resent && !formError ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            {t("resent")}
+          </p>
+        ) : null}
         <Button type="submit" size="lg" disabled={pending}>
           {codeOpen
             ? pending
@@ -269,6 +301,16 @@ export function RegisterForm({
               ? t("sending")
               : t("sendCode")}
         </Button>
+        {codeOpen ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending || cooldown > 0}
+            onClick={resendCode}
+          >
+            {cooldown > 0 ? t("resendIn", { seconds: cooldown }) : t("resend")}
+          </Button>
+        ) : null}
         {codeOpen ? (
           <Button type="button" variant="ghost" onClick={() => setStep("email")}>
             {t("changeEmail")}
