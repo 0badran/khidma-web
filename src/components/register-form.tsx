@@ -9,13 +9,13 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, selectClass } from "@/components/form-field";
-import { registerAction, requestRegisterOtp } from "@/lib/auth-actions";
+import { registerAction, requestRegisterOtp, verifyRegisterOtp } from "@/lib/auth-actions";
 import { clearDraft, readDraft, writeDraft } from "@/lib/draft-store";
 
 type Option = { id: number; nameAr: string; nameEn: string };
 type City = Option & { governorateId: number };
 
-type Step = "details" | "work" | "code";
+type Step = "email" | "code" | "details" | "work";
 const DRAFT_KEY = "register";
 const EMPTY_VALUES = {
   role: "customer",
@@ -46,7 +46,7 @@ export function RegisterForm({
   const [saved] = useState(() =>
     readDraft<{ step: Step; values: Values }>(DRAFT_KEY),
   );
-  const [step, setStep] = useState<Step>(saved?.step ?? "details");
+  const [step, setStep] = useState<Step>(saved?.step ?? "email");
   const [formError, setFormError] = useState<string | null>(null);
 
   const name = (o: Option) => (locale === "ar" ? o.nameAr : o.nameEn);
@@ -107,44 +107,59 @@ export function RegisterForm({
 
   const isProvider = role === "provider";
   const total = isProvider ? 3 : 2;
-  const current = step === "details" ? 1 : step === "work" ? 2 : total;
+  const current = { email: 1, code: 1, details: 2, work: 3 }[step];
 
-  const requestCode = () => {
+  // Stage 1: only the email. A taken email is reported right here.
+  const submitEmail = async () => {
+    if (!(await trigger("email"))) return;
+    setFormError(null);
     startTransition(async () => {
-      setFormError(null);
       const result = await requestRegisterOtp(getValues("email"), t("failed"));
       if (!result.ok) {
         setError("email", { message: result.message });
-        setStep("details");
         return;
       }
       setStep("code");
+      setTimeout(() => document.querySelector<HTMLInputElement>("input[name=otp]")?.focus(), 50);
     });
   };
 
-  // Details stage: a customer goes straight to the code, a provider
-  // continues to the work stage first.
+  // Stage 2: the code is checked by the API before anything else is asked.
+  const submitCode = () => {
+    const otp = getValues("otp");
+    if (!/^\d{6}$/.test(otp)) {
+      setError("otp", { message: tv("otp") });
+      return;
+    }
+    setFormError(null);
+    startTransition(async () => {
+      const result = await verifyRegisterOtp(getValues("email"), otp, t("failed"));
+      if (!result.ok) {
+        setError("otp", { message: result.message });
+        return;
+      }
+      setStep("details");
+    });
+  };
+
+  // Stage 3: a customer creates the account here, a provider continues.
   const submitDetails = async () => {
-    const fields: (keyof Values)[] = ["email", "name", "phone", "birthDate", "password"];
+    const fields: (keyof Values)[] = ["name", "phone", "birthDate", "password"];
     if (!(await trigger(fields))) return;
     if (getValues("role") === "provider") {
       setStep("work");
       return;
     }
-    requestCode();
+    void handleSubmit(onSubmit)();
   };
 
   const submitWork = async () => {
     if (!(await trigger(["categoryId", "cityId"]))) return;
-    requestCode();
+    void handleSubmit(onSubmit)();
   };
 
   const onSubmit = (v: Values) => {
     setFormError(null);
-    if (!/^\d{6}$/.test(v.otp)) {
-      setError("otp", { message: tv("otp") });
-      return;
-    }
     const body: Record<string, unknown> = {
       role: v.role,
       name: v.name,
@@ -175,7 +190,9 @@ export function RegisterForm({
       // A problem in an earlier stage sends the user back to fix it.
       const failed = fieldErrors.map(([field]) => field);
       if (failed.some((f) => f === "categoryId" || f === "cityId")) setStep("work");
-      else if (failed.some((f) => f !== "otp")) setStep("details");
+      else if (failed.includes("email")) setStep("email");
+      else if (failed.includes("otp")) setStep("code");
+      else if (failed.length) setStep("details");
     });
   };
 
@@ -192,36 +209,71 @@ export function RegisterForm({
     <p className="text-sm text-muted-foreground">{t("stepOf", { current, total })}</p>
   );
 
-  if (step === "code") {
+  if (step === "email" || step === "code") {
+    const codeOpen = step === "code";
     return (
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (codeOpen) submitCode();
+          else void submitEmail();
+        }}
+        className="flex flex-col gap-4"
+      >
         {progress}
-        <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
-        <Field required label={t("otp")} error={errors.otp?.message}>
+        <Field required label={t("email")} error={errors.email?.message}>
           <Input
-            {...register("otp")}
-            inputMode="numeric"
-            maxLength={6}
+            type="email"
+            {...register("email")}
+            autoComplete="email"
             dir="ltr"
-            autoComplete="one-time-code"
             autoFocus
+            readOnly={codeOpen}
+            className={codeOpen ? "bg-muted" : undefined}
           />
         </Field>
+        <div
+          inert={!codeOpen}
+          aria-hidden={!codeOpen}
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none ${
+            codeOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div className="flex flex-col gap-4">
+              <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
+              <Field required label={t("otp")} error={errors.otp?.message}>
+                <Input
+                  {...register("otp")}
+                  inputMode="numeric"
+                  maxLength={6}
+                  dir="ltr"
+                  autoComplete="one-time-code"
+                  tabIndex={codeOpen ? 0 : -1}
+                />
+              </Field>
+            </div>
+          </div>
+        </div>
         {formError ? (
           <p role="alert" className="text-sm text-destructive">
             {formError}
           </p>
         ) : null}
         <Button type="submit" size="lg" disabled={pending}>
-          {pending ? t("submitting") : t("submit")}
+          {codeOpen
+            ? pending
+              ? t("verifying")
+              : t("verify")
+            : pending
+              ? t("sending")
+              : t("sendCode")}
         </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setStep(isProvider ? "work" : "details")}
-        >
-          {t("back")}
-        </Button>
+        {codeOpen ? (
+          <Button type="button" variant="ghost" onClick={() => setStep("email")}>
+            {t("changeEmail")}
+          </Button>
+        ) : null}
         {loginLink}
       </form>
     );
@@ -284,7 +336,7 @@ export function RegisterForm({
           </p>
         ) : null}
         <Button type="submit" size="lg" disabled={pending}>
-          {pending ? t("sending") : t("sendCode")}
+          {pending ? t("submitting") : t("submit")}
         </Button>
         <Button type="button" variant="ghost" onClick={() => setStep("details")}>
           {t("back")}
@@ -320,9 +372,6 @@ export function RegisterForm({
       <Field required label={t("name")} error={errors.name?.message}>
         <Input {...register("name")} autoComplete="name" />
       </Field>
-      <Field required label={t("email")} error={errors.email?.message}>
-        <Input type="email" {...register("email")} autoComplete="email" dir="ltr" />
-      </Field>
       <Field required label={t("phone")} error={errors.phone?.message}>
         <Input type="tel" {...register("phone")} autoComplete="tel" dir="ltr" />
       </Field>
@@ -343,7 +392,7 @@ export function RegisterForm({
         </p>
       ) : null}
       <Button type="submit" size="lg" disabled={pending}>
-        {pending ? t("sending") : isProvider ? t("next") : t("sendCode")}
+        {pending ? t("submitting") : isProvider ? t("next") : t("submit")}
       </Button>
       {loginLink}
     </form>

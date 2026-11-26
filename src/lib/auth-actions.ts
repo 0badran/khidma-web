@@ -56,6 +56,17 @@ export async function requestRegisterOtp(
   return { ok: true, message: (out.data as { message?: string }).message };
 }
 
+export async function verifyRegisterOtp(
+  email: string,
+  otp: string,
+  fallback: string,
+): Promise<ActionResult> {
+  const locale = await getActionLocale();
+  const out = await post("/api/auth/register/verify-otp", { email, otp }, locale);
+  if (!out?.res.ok) return failure(out, fallback);
+  return { ok: true };
+}
+
 export async function registerAction(
   body: Record<string, unknown>,
   fallback: string,
