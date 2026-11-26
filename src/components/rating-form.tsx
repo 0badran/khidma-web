@@ -84,7 +84,7 @@ export function RatingForm({
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
           <Field required label={t("phone")}>
-            <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
+            <Input type="tel" inputMode="tel" placeholder="01012345678" value={phone} onChange={(e) => setPhone(e.target.value)} dir="ltr" />
           </Field>
         </>
       )}

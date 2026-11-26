@@ -174,7 +174,7 @@ function PhoneForm() {
     <form onSubmit={submit} className="flex flex-col gap-3">
       <h3 className="font-bold">{t("phoneTitle")}</h3>
       <Field required label={t("newPhone")}>
-        <Input type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} dir="ltr" required />
+        <Input type="tel" inputMode="tel" placeholder="01012345678" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} dir="ltr" required />
       </Field>
       <Field required label={t("currentPassword")}>
         <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" dir="ltr" required />

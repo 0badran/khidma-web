@@ -529,7 +529,7 @@ export function RegisterForm({
         <Input {...register("name")} autoComplete="name" />
       </Field>
       <Field required label={t("phone")} error={errors.phone?.message}>
-        <Input type="tel" {...register("phone")} autoComplete="tel" dir="ltr" />
+        <Input type="tel" inputMode="tel" placeholder="01012345678" {...register("phone")} autoComplete="tel" dir="ltr" />
       </Field>
       {isProvider ? (
         <Field required label={t("birthDate")} error={errors.birthDate?.message}>
