@@ -17,6 +17,18 @@ type City = Option & { governorateId: number };
 
 type Step = "email" | "code" | "details" | "work";
 const DRAFT_KEY = "register";
+// Survives a reload within the tab. Never holds the password, the code or
+// the verification state, so a reload always restarts at the email step.
+const SESSION_KEY = "khidma-register";
+const SAFE_FIELDS = [
+  "role",
+  "email",
+  "name",
+  "phone",
+  "categoryId",
+  "governorateId",
+  "cityId",
+] as const;
 const EMPTY_VALUES = {
   role: "customer",
   email: "",
@@ -88,6 +100,7 @@ export function RegisterForm({
     getValues,
     setValue,
     setError,
+    reset,
     clearErrors,
     control,
     formState: { errors },
@@ -99,7 +112,28 @@ export function RegisterForm({
   const allValues = useWatch({ control });
 
   useEffect(() => {
+    if (saved) return;
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as Partial<Values>;
+      reset({ ...EMPTY_VALUES, ...stored });
+    } catch {
+      // Storage unavailable or corrupt: start empty.
+    }
+    // Runs once on mount, after hydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     writeDraft(DRAFT_KEY, { step, values: allValues });
+    try {
+      const safe: Record<string, unknown> = {};
+      for (const key of SAFE_FIELDS) safe[key] = allValues[key];
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(safe));
+    } catch {
+      // Storage unavailable: the in-memory draft still works.
+    }
   }, [step, allValues]);
 
   const governorateId = useWatch({ control, name: "governorateId" });
@@ -207,6 +241,11 @@ export function RegisterForm({
       if (!result) return;
       if (result.ok) {
         clearDraft(DRAFT_KEY);
+        try {
+          sessionStorage.removeItem(SESSION_KEY);
+        } catch {
+          // Nothing to clear.
+        }
         return;
       }
       setFormError(result.message);
