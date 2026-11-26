@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldErrors } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
@@ -17,8 +17,12 @@ type City = Option & { governorateId: number };
 
 type Step = "email" | "code" | "details" | "work";
 const DRAFT_KEY = "register";
-// Survives a reload within the tab. Never holds the password, the code or
-// the verification state, so a reload always restarts at the email step.
+// Survives a reload within the tab. Never holds the password or the code.
+// Once the email is verified it also keeps the step and the signed email
+// proof from the API (bound to the email, valid 30 minutes), which the final
+// sign-up call sends instead of the code. After it expires the user starts
+// again at the email step.
+const PROOF_KEEP_MS = 29 * 60 * 1000;
 const SESSION_KEY = "khidma-register";
 const SAFE_FIELDS = [
   "role",
@@ -61,6 +65,7 @@ export function RegisterForm({
   const [step, setStep] = useState<Step>(saved?.step ?? "email");
   const [formError, setFormError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
+  const [proof, setProof] = useState<{ token: string; at: number } | null>(null);
   const [resent, setResent] = useState(false);
 
   useEffect(() => {
@@ -110,14 +115,32 @@ export function RegisterForm({
   });
   const role = useWatch({ control, name: "role" });
   const allValues = useWatch({ control });
+  const verifiedEmail = useWatch({ control, name: "email" });
 
   useEffect(() => {
     if (saved) return;
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return;
-      const stored = JSON.parse(raw) as Partial<Values>;
-      reset({ ...EMPTY_VALUES, ...stored });
+      const { verified, ...stored } = JSON.parse(raw) as Partial<Values> & {
+        verified?: { step: Step; token: string; at: number };
+      };
+      const fresh =
+        verified &&
+        (verified.step === "details" || verified.step === "work") &&
+        typeof verified.token === "string" &&
+        Date.now() - verified.at < PROOF_KEEP_MS;
+      // Applied on the next tick. The storage was already read above, before
+      // the effect below rewrites it.
+      setTimeout(() => {
+        reset({ ...EMPTY_VALUES, ...stored });
+        if (fresh) {
+          setProof({ token: verified.token, at: verified.at });
+          // The password is never stored, so the user returns to the first
+          // step that asks for it.
+          setStep("details");
+        }
+      }, 0);
     } catch {
       // Storage unavailable or corrupt: start empty.
     }
@@ -130,11 +153,14 @@ export function RegisterForm({
     try {
       const safe: Record<string, unknown> = {};
       for (const key of SAFE_FIELDS) safe[key] = allValues[key];
+      if ((step === "details" || step === "work") && proof) {
+        safe.verified = { step, token: proof.token, at: proof.at };
+      }
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(safe));
     } catch {
       // Storage unavailable: the in-memory draft still works.
     }
-  }, [step, allValues]);
+  }, [step, allValues, proof]);
 
   const governorateId = useWatch({ control, name: "governorateId" });
   const governorateName = new Map(governorates.map((g) => [g.id, name(g)]));
@@ -200,6 +226,12 @@ export function RegisterForm({
         setError("otp", { message: result.message });
         return;
       }
+      if (!result.token) {
+        setFormError(t("failed"));
+        return;
+      }
+      setProof({ token: result.token, at: Date.now() });
+      setValue("otp", "");
       setStep("details");
     });
   };
@@ -213,23 +245,33 @@ export function RegisterForm({
       setStep("work");
       return;
     }
-    void handleSubmit(onSubmit)();
+    void handleSubmit(onSubmit, onInvalid)();
   };
 
   const submitWork = async () => {
     if (!(await trigger(["categoryId", "cityId"]))) return;
-    void handleSubmit(onSubmit)();
+    void handleSubmit(onSubmit, onInvalid)();
+  };
+
+  // A field from an earlier step is missing or wrong: go back to that step.
+  const onInvalid = (errs: FieldErrors<Values>) => {
+    if (errs.name || errs.phone || errs.password || errs.birthDate) setStep("details");
+    else if (errs.categoryId || errs.cityId) setStep("work");
   };
 
   const onSubmit = (v: Values) => {
     setFormError(null);
+    if (!proof) {
+      setStep("email");
+      return;
+    }
     const body: Record<string, unknown> = {
       role: v.role,
       name: v.name,
       phone: v.phone,
       email: v.email,
       password: v.password,
-      otp: v.otp,
+      verificationToken: proof.token,
     };
     if (v.role === "provider") body.birthDate = v.birthDate;
     if (v.role === "provider") {
@@ -249,6 +291,13 @@ export function RegisterForm({
         return;
       }
       setFormError(result.message);
+      if (result.fields?.verificationToken) {
+        // The email proof expired or was refused: verify the email again.
+        setProof(null);
+        setValue("otp", "");
+        setStep("email");
+        return;
+      }
       const fieldErrors = Object.entries(result.fields ?? {}).filter(
         ([field]) => field in v,
       );
@@ -262,6 +311,22 @@ export function RegisterForm({
       else if (failed.includes("otp")) setStep("code");
       else if (failed.length) setStep("details");
     });
+  };
+
+  // Starts over: clears every field, the email proof and the stored draft.
+  const startOver = () => {
+    reset(EMPTY_VALUES);
+    setProof(null);
+    setFormError(null);
+    setCooldown(0);
+    setResent(false);
+    clearDraft(DRAFT_KEY);
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch {
+      // Nothing to clear.
+    }
+    setStep("email");
   };
 
   const loginLink = (
@@ -452,6 +517,14 @@ export function RegisterForm({
       className="flex flex-col gap-4"
     >
       {progress}
+      <div className="flex flex-col gap-2">
+        <Field label={t("email")}>
+          <Input value={verifiedEmail} readOnly disabled dir="ltr" />
+        </Field>
+        <Button type="button" variant="outline" onClick={startOver}>
+          {t("changeEmailStartOver")}
+        </Button>
+      </div>
       <Field required label={t("name")} error={errors.name?.message}>
         <Input {...register("name")} autoComplete="name" />
       </Field>

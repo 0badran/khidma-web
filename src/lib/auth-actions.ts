@@ -12,7 +12,7 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type ActionResult =
-  | { ok: true; message?: string }
+  | { ok: true; message?: string; token?: string }
   | { ok: false; message: string; fields?: Record<string, string[]> };
 
 type Tokens = { token: string; refreshToken: string; expiresIn: number };
@@ -64,7 +64,7 @@ export async function verifyRegisterOtp(
   const locale = await getActionLocale();
   const out = await post("/api/auth/register/verify-otp", { email, otp }, locale);
   if (!out?.res.ok) return failure(out, fallback);
-  return { ok: true };
+  return { ok: true, token: (out.data as { verificationToken?: string }).verificationToken };
 }
 
 export async function registerAction(

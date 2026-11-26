@@ -108,6 +108,7 @@
     "resend": "Resend code",
     "resendIn": "Resend code in {seconds}s",
     "resent": "A new code was sent. The old one no longer works.",
+    "changeEmailStartOver": "Change email (clears everything and starts over)",
     "stepOf": "Step {current} of {total}",
     "profileLater": "You can add your photo, years of experience and bio from your profile after creating the account.",
     "governorateOptional": "Governorate (optional)",
