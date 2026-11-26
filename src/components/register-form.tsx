@@ -197,7 +197,7 @@ export function RegisterForm({
       password: v.password,
       otp: v.otp,
     };
-    if (v.role === "provider" || v.birthDate) body.birthDate = v.birthDate;
+    if (v.role === "provider") body.birthDate = v.birthDate;
     if (v.role === "provider") {
       body.categoryId = Number(v.categoryId);
       body.cityId = Number(v.cityId);
@@ -419,14 +419,16 @@ export function RegisterForm({
       <Field required label={t("phone")} error={errors.phone?.message}>
         <Input type="tel" {...register("phone")} autoComplete="tel" dir="ltr" />
       </Field>
-      <Field required={isProvider} label={isProvider ? t("birthDate") : t("birthDateOptional")} error={errors.birthDate?.message}>
-        <Input
-          type="date"
-          {...register("birthDate")}
-          dir="ltr"
-          className="block min-w-0 max-w-full appearance-none text-start [&::-webkit-date-and-time-value]:text-start"
-        />
-      </Field>
+      {isProvider ? (
+        <Field required label={t("birthDate")} error={errors.birthDate?.message}>
+          <Input
+            type="date"
+            {...register("birthDate")}
+            dir="ltr"
+            className="block min-w-0 max-w-full appearance-none text-start [&::-webkit-date-and-time-value]:text-start"
+          />
+        </Field>
+      ) : null}
       <Field required label={t("password")} error={errors.password?.message}>
         <Input type="password" {...register("password")} autoComplete="new-password" dir="ltr" />
       </Field>
