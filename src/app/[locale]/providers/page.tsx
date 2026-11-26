@@ -1,3 +1,4 @@
+import { getMe } from "@/lib/session";
 import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -31,6 +32,18 @@ export default async function ProvidersPage({
   const t = await getTranslations("Providers");
   const { q, categoryId, governorateId, cityId: rawCityId, page } = await searchParams;
   const cityId = rawCityId;
+  // A signed-in customer with a city starts on that city. Any filter in the
+  // URL, even an empty one from the form, counts as their own choice.
+  if (q === undefined && categoryId === undefined && governorateId === undefined && rawCityId === undefined && page === undefined) {
+    const me = await getMe();
+    if (me?.city) {
+      const params = new URLSearchParams({
+        governorateId: String(me.city.governorateId),
+        cityId: String(me.city.id),
+      });
+      return redirect({ href: `/providers?${params}`, locale });
+    }
+  }
   const pageNumber = Math.max(1, Number(page) || 1);
 
   let categories, governorates, result;

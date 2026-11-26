@@ -150,7 +150,8 @@
     "inactive": "Your account is currently deactivated and hidden from customers.",
     "viewPublic": "View your public page",
     "citySearch": "Search for a city",
-    "cityEmpty": "No matching cities"
+    "cityEmpty": "No matching cities",
+    "cityOptional": "City (optional)"
   },
   "Rating": {
     "title": "Rate this provider",

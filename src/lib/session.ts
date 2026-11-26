@@ -16,6 +16,7 @@ export type SessionUser = {
   phone: string;
   email: string;
   birthDate: string | null;
+  cityId?: number | null;
 };
 
 export async function setSessionCookies(tokens: {
@@ -71,6 +72,7 @@ export type ProviderProfile = {
 export async function getMe(): Promise<{
   user: SessionUser;
   provider: ProviderProfile | null;
+  city: { id: number; governorateId: number } | null;
 } | null> {
   const token = await getAccessToken();
   if (!token || !API_URL) return null;
@@ -83,8 +85,9 @@ export async function getMe(): Promise<{
     const data = (await res.json()) as {
       user: SessionUser;
       provider?: ProviderProfile;
+      city?: { id: number; governorateId: number } | null;
     };
-    return { user: data.user, provider: data.provider ?? null };
+    return { user: data.user, provider: data.provider ?? null, city: data.city ?? null };
   } catch {
     return null;
   }

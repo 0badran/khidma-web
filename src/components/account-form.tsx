@@ -26,6 +26,7 @@ export type AccountData = {
   email: string;
   phone: string;
   birthDate: string;
+  customerCityId: number | null;
   provider: {
     categoryId: number;
     governorateId: number;
@@ -98,7 +99,7 @@ export function AccountForm({
       birthDate: data.birthDate,
       categoryId: String(data.provider?.categoryId ?? ""),
       governorateId: data.provider ? String(data.provider.governorateId) : "",
-      cityId: String(data.provider?.cityId ?? ""),
+      cityId: String(data.provider?.cityId ?? data.customerCityId ?? ""),
       yearsOfExperience: data.provider?.yearsOfExperience?.toString() ?? "",
       bio: data.provider?.bio ?? "",
     },
@@ -110,6 +111,7 @@ export function AccountForm({
   const onSubmit = (v: Values) => {
     setMessage(null);
     const body: Record<string, unknown> = { name: v.name, birthDate: v.birthDate || null };
+    if (!isProvider) body.cityId = v.cityId ? Number(v.cityId) : null;
     if (isProvider) {
       body.categoryId = Number(v.categoryId);
       body.cityId = Number(v.cityId);
@@ -231,6 +233,18 @@ export function AccountForm({
         <Field required={isProvider} label={isProvider ? t("birthDate") : t("birthDateOptional")} error={errors.birthDate?.message}>
           <Input type="date" {...register("birthDate")} dir="ltr" />
         </Field>
+
+        {!isProvider ? (
+          <Field label={t("cityOptional")}>
+            <CityCombobox
+              cityId={cityId}
+              onSelect={(city) => setValue("cityId", city?.id ?? "")}
+              placeholder={t("citySearch")}
+              emptyText={t("cityEmpty")}
+              ariaLabel={t("city")}
+            />
+          </Field>
+        ) : null}
 
         {isProvider ? (
           <>

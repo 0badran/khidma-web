@@ -39,6 +39,7 @@ export default async function AccountPage() {
           email: me.user.email,
           phone: me.user.phone,
           birthDate: me.user.birthDate ?? "",
+          customerCityId: me.city?.id ?? null,
           provider: me.provider,
         }}
         categories={categories}
