@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +13,7 @@ import { registerAction, requestRegisterOtp } from "@/lib/auth-actions";
 import { clearDraft, readDraft, writeDraft } from "@/lib/draft-store";
 
 type Option = { id: number; nameAr: string; nameEn: string };
+type City = Option & { governorateId: number };
 
 type Step = "details" | "work" | "code";
 const DRAFT_KEY = "register";
@@ -29,24 +30,14 @@ const EMPTY_VALUES = {
   cityId: "",
 } as const;
 
-async function fetchCities(governorateId: string): Promise<Option[]> {
-  if (!governorateId) return [];
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/governorates/${governorateId}/cities`,
-    );
-    return res.ok ? ((await res.json()) as { cities: Option[] }).cities : [];
-  } catch {
-    return [];
-  }
-}
-
 export function RegisterForm({
   categories,
   governorates,
+  cities,
 }: {
   categories: Option[];
   governorates: Option[];
+  cities: City[];
 }) {
   const t = useTranslations("Register");
   const tv = useTranslations("Validation");
@@ -57,7 +48,6 @@ export function RegisterForm({
   );
   const [step, setStep] = useState<Step>(saved?.step ?? "details");
   const [formError, setFormError] = useState<string | null>(null);
-  const [cities, setCities] = useState<Option[]>([]);
 
   const name = (o: Option) => (locale === "ar" ? o.nameAr : o.nameEn);
 
@@ -102,28 +92,18 @@ export function RegisterForm({
     writeDraft(DRAFT_KEY, { step, values: allValues });
   }, [step, allValues]);
 
-  // The saved city can only be selected once its option exists.
-  const pendingCity = useRef(saved?.values.cityId ?? "");
-  useEffect(() => {
-    if (cities.length > 0 && pendingCity.current) {
-      setValue("cityId", pendingCity.current);
-      pendingCity.current = "";
-    }
-  }, [cities, setValue]);
-
-  useEffect(() => {
-    const governorateId = saved?.values.governorateId;
-    if (!governorateId) return;
-    let cancelled = false;
-    fetchCities(governorateId).then((list) => {
-      if (!cancelled) setCities(list);
-    });
-    return () => {
-      cancelled = true;
-    };
-    // Runs once after a language switch to reload the city names.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const governorateId = useWatch({ control, name: "governorateId" });
+  const governorateName = new Map(governorates.map((g) => [g.id, name(g)]));
+  // All cities are listed. The optional governorate only narrows the list.
+  const cityOptions = cities
+    .filter((c) => !governorateId || String(c.governorateId) === governorateId)
+    .map((c) => ({
+      id: c.id,
+      label: governorateId
+        ? name(c)
+        : `${name(c)}, ${governorateName.get(c.governorateId) ?? ""}`,
+    }))
+    .sort((x, y) => x.label.localeCompare(y.label, locale));
 
   const isProvider = role === "provider";
   const total = isProvider ? 3 : 2;
@@ -157,12 +137,6 @@ export function RegisterForm({
   const submitWork = async () => {
     if (!(await trigger(["categoryId", "cityId"]))) return;
     requestCode();
-  };
-
-  const loadCities = async (governorateId: string) => {
-    setCities([]);
-    setValue("cityId", "");
-    setCities(await fetchCities(governorateId));
   };
 
   const onSubmit = (v: Values) => {
@@ -223,7 +197,7 @@ export function RegisterForm({
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
         {progress}
         <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
-        <Field label={t("otp")} error={errors.otp?.message}>
+        <Field required label={t("otp")} error={errors.otp?.message}>
           <Input
             {...register("otp")}
             inputMode="numeric"
@@ -263,7 +237,7 @@ export function RegisterForm({
         className="flex flex-col gap-4"
       >
         {progress}
-        <Field label={t("category")} error={errors.categoryId?.message}>
+        <Field required label={t("category")} error={errors.categoryId?.message}>
           <select {...register("categoryId")} className={selectClass}>
             <option value="">{t("choose")}</option>
             {categories.map((c) => (
@@ -273,14 +247,19 @@ export function RegisterForm({
             ))}
           </select>
         </Field>
-        <Field label={t("governorate")}>
+        <Field label={t("governorateOptional")}>
           <select
             {...register("governorateId", {
-              onChange: (e) => loadCities(e.target.value),
+              onChange: (e) => {
+                const city = cities.find((c) => String(c.id) === getValues("cityId"));
+                if (e.target.value && city && String(city.governorateId) !== e.target.value) {
+                  setValue("cityId", "");
+                }
+              },
             })}
             className={selectClass}
           >
-            <option value="">{t("choose")}</option>
+            <option value="">{t("allGovernorates")}</option>
             {governorates.map((g) => (
               <option key={g.id} value={g.id}>
                 {name(g)}
@@ -288,12 +267,12 @@ export function RegisterForm({
             ))}
           </select>
         </Field>
-        <Field label={t("city")} error={errors.cityId?.message}>
-          <select {...register("cityId")} className={selectClass} disabled={cities.length === 0}>
+        <Field required label={t("city")} error={errors.cityId?.message}>
+          <select {...register("cityId")} className={selectClass}>
             <option value="">{t("choose")}</option>
-            {cities.map((c) => (
+            {cityOptions.map((c) => (
               <option key={c.id} value={c.id}>
-                {name(c)}
+                {c.label}
               </option>
             ))}
           </select>
@@ -338,16 +317,16 @@ export function RegisterForm({
           ))}
         </div>
       </fieldset>
-      <Field label={t("name")} error={errors.name?.message}>
+      <Field required label={t("name")} error={errors.name?.message}>
         <Input {...register("name")} autoComplete="name" />
       </Field>
-      <Field label={t("email")} error={errors.email?.message}>
+      <Field required label={t("email")} error={errors.email?.message}>
         <Input type="email" {...register("email")} autoComplete="email" dir="ltr" />
       </Field>
-      <Field label={t("phone")} error={errors.phone?.message}>
+      <Field required label={t("phone")} error={errors.phone?.message}>
         <Input type="tel" {...register("phone")} autoComplete="tel" dir="ltr" />
       </Field>
-      <Field label={t("birthDate")} error={errors.birthDate?.message}>
+      <Field required label={t("birthDate")} error={errors.birthDate?.message}>
         <Input
           type="date"
           {...register("birthDate")}
@@ -355,7 +334,7 @@ export function RegisterForm({
           className="block min-w-0 max-w-full appearance-none text-start [&::-webkit-date-and-time-value]:text-start"
         />
       </Field>
-      <Field label={t("password")} error={errors.password?.message}>
+      <Field required label={t("password")} error={errors.password?.message}>
         <Input type="password" {...register("password")} autoComplete="new-password" dir="ltr" />
       </Field>
       {formError ? (

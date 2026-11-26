@@ -21,6 +21,13 @@ export type Banner = {
 
 export type Governorate = { id: number; nameAr: string; nameEn: string };
 
+export type City = {
+  id: number;
+  governorateId: number;
+  nameAr: string;
+  nameEn: string;
+};
+
 export type Provider = {
   id: number;
   name: string;
@@ -63,11 +70,15 @@ export type ProviderFilters = {
   limit?: number;
 };
 
-async function apiGet<T>(path: string, locale: string): Promise<T | null> {
+async function apiGet<T>(
+  path: string,
+  locale: string,
+  revalidate = 60,
+): Promise<T | null> {
   if (!API_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
   const res = await fetch(`${API_URL}${path}`, {
     headers: { "Accept-Language": locale },
-    next: { revalidate: 60 },
+    next: { revalidate },
   });
   if (res.status === 503) throw new MaintenanceError();
   if (res.status === 404) return null;
@@ -97,6 +108,22 @@ export async function getGovernorates(locale: string) {
     locale,
   );
   return data?.governorates ?? [];
+}
+
+// There is no single "all cities" route, so read each governorate's list.
+// Every request is cached for an hour.
+export async function getAllCities(locale: string, governorates: Governorate[]) {
+  const lists = await Promise.all(
+    governorates.map(async (g) => {
+      const data = await apiGet<{ cities: Omit<City, "governorateId">[] }>(
+        `/api/governorates/${g.id}/cities`,
+        locale,
+        3600,
+      );
+      return (data?.cities ?? []).map((c) => ({ ...c, governorateId: g.id }));
+    }),
+  );
+  return lists.flat();
 }
 
 export async function getProviders(locale: string, filters: ProviderFilters = {}) {

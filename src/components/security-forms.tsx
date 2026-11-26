@@ -78,10 +78,10 @@ function PasswordForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <h3 className="font-bold">{t("passwordTitle")}</h3>
-      <Field label={t("currentPassword")}>
+      <Field required label={t("currentPassword")}>
         <Input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" dir="ltr" required />
       </Field>
-      <Field label={t("newPassword")} error={localError ?? undefined}>
+      <Field required label={t("newPassword")} error={localError ?? undefined}>
         <Input type="password" value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" dir="ltr" required />
       </Field>
       <Message msg={msg} />
@@ -132,15 +132,15 @@ function EmailForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <h3 className="font-bold">{t("emailTitle")}</h3>
-      <Field label={t("newEmail")}>
+      <Field required label={t("newEmail")}>
         <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} dir="ltr" required readOnly={step === 2} />
       </Field>
       {step === 1 ? (
-        <Field label={t("currentPassword")}>
+        <Field required label={t("currentPassword")}>
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" dir="ltr" required />
         </Field>
       ) : (
-        <Field label={t("otp")}>
+        <Field required label={t("otp")}>
           <Input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" maxLength={6} dir="ltr" required />
         </Field>
       )}
@@ -173,10 +173,10 @@ function PhoneForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <h3 className="font-bold">{t("phoneTitle")}</h3>
-      <Field label={t("newPhone")}>
+      <Field required label={t("newPhone")}>
         <Input type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)} dir="ltr" required />
       </Field>
-      <Field label={t("currentPassword")}>
+      <Field required label={t("currentPassword")}>
         <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" dir="ltr" required />
       </Field>
       <Message msg={msg} />

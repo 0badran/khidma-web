@@ -233,16 +233,16 @@ export function AccountForm({
         <Field label={t("phone")}>
           <Input value={data.phone} readOnly disabled dir="ltr" />
         </Field>
-        <Field label={t("name")} error={errors.name?.message}>
+        <Field required label={t("name")} error={errors.name?.message}>
           <Input {...register("name")} />
         </Field>
-        <Field label={t("birthDate")} error={errors.birthDate?.message}>
+        <Field required label={t("birthDate")} error={errors.birthDate?.message}>
           <Input type="date" {...register("birthDate")} dir="ltr" />
         </Field>
 
         {isProvider ? (
           <>
-            <Field label={t("category")} error={errors.categoryId?.message}>
+            <Field required label={t("category")} error={errors.categoryId?.message}>
               <select {...register("categoryId")} className={selectClass}>
                 <option value="">{t("choose")}</option>
                 {categories.map((c) => (
@@ -265,7 +265,7 @@ export function AccountForm({
                 ))}
               </select>
             </Field>
-            <Field label={t("city")} error={errors.cityId?.message}>
+            <Field required label={t("city")} error={errors.cityId?.message}>
               <select {...register("cityId")} className={selectClass} disabled={cities.length === 0}>
                 <option value="">{t("choose")}</option>
                 {cities.map((c) => (

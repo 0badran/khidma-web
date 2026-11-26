@@ -39,10 +39,10 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <Field label={t("identifier")} error={errors.identifier?.message}>
+      <Field required label={t("identifier")} error={errors.identifier?.message}>
         <Input {...register("identifier")} autoComplete="username" dir="ltr" />
       </Field>
-      <Field label={t("password")} error={errors.password?.message}>
+      <Field required label={t("password")} error={errors.password?.message}>
         <Input
           type="password"
           {...register("password")}

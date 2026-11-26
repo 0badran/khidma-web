@@ -102,7 +102,9 @@
     "login": "Log in",
     "next": "Next",
     "stepOf": "Step {current} of {total}",
-    "profileLater": "You can add your photo, years of experience and bio from your profile after creating the account."
+    "profileLater": "You can add your photo, years of experience and bio from your profile after creating the account.",
+    "governorateOptional": "Governorate (optional)",
+    "allGovernorates": "All governorates"
   },
   "Account": {
     "title": "My account",

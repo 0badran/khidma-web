@@ -102,7 +102,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <Field label={t("email")} error={errors.email?.message}>
+      <Field required label={t("email")} error={errors.email?.message}>
         <Input type="email" {...register("email")} autoComplete="email" dir="ltr" readOnly={step === 2} />
       </Field>
       {step === 1 ? (
@@ -112,10 +112,10 @@ export function ForgotPasswordForm() {
       ) : (
         <>
           <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
-          <Field label={t("otp")} error={errors.otp?.message}>
+          <Field required label={t("otp")} error={errors.otp?.message}>
             <Input {...register("otp")} inputMode="numeric" maxLength={6} dir="ltr" autoComplete="one-time-code" />
           </Field>
-          <Field label={t("newPassword")} error={errors.newPassword?.message}>
+          <Field required label={t("newPassword")} error={errors.newPassword?.message}>
             <Input type="password" {...register("newPassword")} autoComplete="new-password" dir="ltr" />
           </Field>
           <Button type="submit" size="lg" disabled={pending}>
