@@ -521,7 +521,7 @@ export function RegisterForm({
         <Field label={t("email")}>
           <Input value={verifiedEmail} readOnly disabled dir="ltr" />
         </Field>
-        <Button type="button" variant="outline" onClick={startOver}>
+        <Button type="button" variant="link" className="self-start" onClick={startOver}>
           {t("changeEmailStartOver")}
         </Button>
       </div>
