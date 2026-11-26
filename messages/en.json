@@ -205,7 +205,7 @@
   },
   "Hero": {
     "label": "Featured services",
-    "cta": "Find a technician",
+    "cta": "Find a provider",
     "goTo": "Slide {number}"
   },
   "LocaleSwitcher": {
