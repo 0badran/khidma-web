@@ -6,6 +6,7 @@ import { Translate } from "@phosphor-icons/react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { keepDraftsForLocaleSwitch } from "@/lib/draft-store";
 
 export function LocaleSwitcher() {
   const locale = useLocale();
@@ -22,6 +23,7 @@ export function LocaleSwitcher() {
     const rest = { ...params } as Record<string, string | string[]>;
     delete rest.locale;
     const query = Object.fromEntries(searchParams.entries());
+    keepDraftsForLocaleSwitch();
     startTransition(() => {
       router.replace(
         // Dynamic segments such as the provider id stay in `params`.

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState, useTransition } from "react";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/form-field";
+import { clearDraft, readDraft, writeDraft } from "@/lib/draft-store";
 import {
   forgotPasswordRequestAction,
   forgotPasswordResetAction,
@@ -18,9 +19,14 @@ export function ForgotPasswordForm() {
   const t = useTranslations("Forgot");
   const tv = useTranslations("Validation");
   const [pending, startTransition] = useTransition();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [saved] = useState(() =>
+    readDraft<{
+      step: 1 | 2;
+      values: { email: string; otp: string; newPassword: string };
+    }>("forgot-password"),
+  );
+  const [step, setStep] = useState<1 | 2 | 3>(saved?.step ?? 1);
   const [formError, setFormError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   const schema = z.object({
     email: z.email(tv("email")),
@@ -35,11 +41,21 @@ export function ForgotPasswordForm() {
     trigger,
     getValues,
     setError,
+    control,
     formState: { errors },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", otp: "", newPassword: "" },
+    defaultValues: saved?.values ?? { email: "", otp: "", newPassword: "" },
   });
+  const allValues = useWatch({ control });
+
+  useEffect(() => {
+    if (step === 3) {
+      clearDraft("forgot-password");
+      return;
+    }
+    writeDraft("forgot-password", { step, values: allValues });
+  }, [step, allValues]);
 
   const sendCode = () => {
     startTransition(async () => {
@@ -50,7 +66,6 @@ export function ForgotPasswordForm() {
         setFormError(result.message);
         return;
       }
-      setInfo(result.message ?? t("codeSent"));
       setStep(2);
     });
   };
@@ -96,7 +111,7 @@ export function ForgotPasswordForm() {
         </Button>
       ) : (
         <>
-          {info ? <p className="text-sm text-muted-foreground">{info}</p> : null}
+          <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
           <Field label={t("otp")} error={errors.otp?.message}>
             <Input {...register("otp")} inputMode="numeric" maxLength={6} dir="ltr" autoComplete="one-time-code" />
           </Field>

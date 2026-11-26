@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   changePhoneAction,
 } from "@/lib/account-actions";
 import type { ActionResult } from "@/lib/auth-actions";
+import { readDraft, writeDraft } from "@/lib/draft-store";
 
 type Msg = { ok: boolean; text: string } | null;
 
@@ -94,10 +95,17 @@ function PasswordForm() {
 function EmailForm() {
   const t = useTranslations("Security");
   const { pending, msg, run } = useAction();
-  const [step, setStep] = useState<1 | 2>(1);
-  const [newEmail, setNewEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
+  const [saved] = useState(() =>
+    readDraft<{ step: 1 | 2; newEmail: string; password: string; otp: string }>("change-email"),
+  );
+  const [step, setStep] = useState<1 | 2>(saved?.step ?? 1);
+  const [newEmail, setNewEmail] = useState(saved?.newEmail ?? "");
+  const [password, setPassword] = useState(saved?.password ?? "");
+  const [otp, setOtp] = useState(saved?.otp ?? "");
+
+  useEffect(() => {
+    writeDraft("change-email", { step, newEmail, password, otp });
+  }, [step, newEmail, password, otp]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
