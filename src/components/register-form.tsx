@@ -8,12 +8,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CityCombobox } from "@/components/city-combobox";
 import { Field, selectClass } from "@/components/form-field";
 import { registerAction, requestRegisterOtp, verifyRegisterOtp } from "@/lib/auth-actions";
 import { clearDraft, readDraft, writeDraft } from "@/lib/draft-store";
 
 type Option = { id: number; nameAr: string; nameEn: string };
-type City = Option & { governorateId: number };
 
 type Step = "email" | "code" | "details" | "work";
 const DRAFT_KEY = "register";
@@ -49,11 +49,9 @@ const EMPTY_VALUES = {
 export function RegisterForm({
   categories,
   governorates,
-  cities,
 }: {
   categories: Option[];
   governorates: Option[];
-  cities: City[];
 }) {
   const t = useTranslations("Register");
   const tv = useTranslations("Validation");
@@ -163,17 +161,7 @@ export function RegisterForm({
   }, [step, allValues, proof]);
 
   const governorateId = useWatch({ control, name: "governorateId" });
-  const governorateName = new Map(governorates.map((g) => [g.id, name(g)]));
-  // All cities are listed. The optional governorate only narrows the list.
-  const cityOptions = cities
-    .filter((c) => !governorateId || String(c.governorateId) === governorateId)
-    .map((c) => ({
-      id: c.id,
-      label: governorateId
-        ? name(c)
-        : `${name(c)}, ${governorateName.get(c.governorateId) ?? ""}`,
-    }))
-    .sort((x, y) => x.label.localeCompare(y.label, locale));
+  const cityId = useWatch({ control, name: "cityId" });
 
   const isProvider = role === "provider";
   const total = isProvider ? 3 : 2;
@@ -465,10 +453,7 @@ export function RegisterForm({
           <select
             {...register("governorateId", {
               onChange: (e) => {
-                const city = cities.find((c) => String(c.id) === getValues("cityId"));
-                if (e.target.value && city && String(city.governorateId) !== e.target.value) {
-                  setValue("cityId", "");
-                }
+                if (e.target.value && getValues("cityId")) setValue("cityId", "");
               },
             })}
             className={selectClass}
@@ -482,14 +467,19 @@ export function RegisterForm({
           </select>
         </Field>
         <Field required label={t("city")} error={errors.cityId?.message}>
-          <select {...register("cityId")} className={selectClass}>
-            <option value="">{t("choose")}</option>
-            {cityOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+          <CityCombobox
+            cityId={cityId}
+            governorateId={governorateId}
+            onSelect={(city) => {
+              setValue("cityId", city?.id ?? "", { shouldValidate: true });
+              if (city) {
+                setValue("governorateId", city.governorateId);
+              }
+            }}
+            placeholder={t("citySearch")}
+            emptyText={t("cityEmpty")}
+            ariaLabel={t("city")}
+          />
         </Field>
         <p className="text-xs text-muted-foreground">{t("profileLater")}</p>
         {formError ? (

@@ -113,7 +113,9 @@
     "stepOf": "Step {current} of {total}",
     "profileLater": "You can add your photo, years of experience and bio from your profile after creating the account.",
     "governorateOptional": "Governorate (optional)",
-    "allGovernorates": "All governorates"
+    "allGovernorates": "All governorates",
+    "citySearch": "Search for a city",
+    "cityEmpty": "No matching cities"
   },
   "Account": {
     "governorateOptional": "Governorate (optional)",
@@ -146,7 +148,9 @@
     "deleteConfirm": "Yes, delete my account",
     "cancel": "Cancel",
     "inactive": "Your account is currently deactivated and hidden from customers.",
-    "viewPublic": "View your public page"
+    "viewPublic": "View your public page",
+    "citySearch": "Search for a city",
+    "cityEmpty": "No matching cities"
   },
   "Rating": {
     "title": "Rate this provider",

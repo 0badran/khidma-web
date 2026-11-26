@@ -1,75 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
+import { CityCombobox } from "@/components/city-combobox";
 
-type Option = { id: string; label: string };
 type Named = { id: number; nameAr: string; nameEn: string };
 
 export function LocationFilter({
   governorates,
   initialGovernorateId,
-  initialCity,
+  initialCityId,
   selectClass,
 }: {
   governorates: Named[];
   initialGovernorateId: string;
-  initialCity: Option | null;
+  initialCityId: string;
   selectClass: string;
 }) {
   const t = useTranslations("Providers");
   const locale = useLocale();
-  const pick = (n: Named) => (locale === "ar" ? n.nameAr : n.nameEn);
-
   const [governorateId, setGovernorateId] = useState(initialGovernorateId);
-  const [city, setCity] = useState<Option | null>(initialCity);
-  const [query, setQuery] = useState(initialCity?.label ?? "");
-  const [items, setItems] = useState<Option[]>(initialCity ? [initialCity] : []);
-  const [loading, setLoading] = useState(false);
-  const firstRun = useRef(true);
-
-  useEffect(() => {
-    if (!governorateId) return;
-    // Skip the lookup that only echoes the already selected city.
-    const searching = city === null || query !== city.label;
-    if (firstRun.current && !searching) {
-      firstRun.current = false;
-      return;
-    }
-    firstRun.current = false;
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const params = new URLSearchParams({
-          governorateId,
-          locale,
-          q: searching ? query : "",
-        });
-        const res = await fetch(`/api/cities?${params}`, { signal: controller.signal });
-        if (!res.ok) throw new Error("lookup failed");
-        const data = (await res.json()) as { cities: Named[] };
-        setItems(data.cities.map((c) => ({ id: String(c.id), label: pick(c) })));
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") setItems([]);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }, 250);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [governorateId, query, locale]);
+  const [cityId, setCityId] = useState(initialCityId);
 
   return (
     <>
@@ -78,8 +29,7 @@ export function LocationFilter({
         value={governorateId}
         onChange={(e) => {
           setGovernorateId(e.target.value);
-          setCity(null);
-          setQuery("");
+          if (e.target.value && cityId) setCityId("");
         }}
         className={selectClass}
         aria-label={t("governorate")}
@@ -87,42 +37,25 @@ export function LocationFilter({
         <option value="">{t("allGovernorates")}</option>
         {governorates.map((g) => (
           <option key={g.id} value={g.id}>
-            {pick(g)}
+            {locale === "ar" ? g.nameAr : g.nameEn}
           </option>
         ))}
       </select>
-      <input type="hidden" name="cityId" value={governorateId && city ? city.id : ""} />
-      <Combobox
-        items={governorateId ? items : []}
-        filter={null}
-        value={city}
-        onValueChange={(value) => {
-          setCity(value);
-          setQuery(value?.label ?? "");
+      <input type="hidden" name="cityId" value={cityId} />
+      <CityCombobox
+        cityId={cityId}
+        governorateId={governorateId}
+        onSelect={(city) => {
+          setCityId(city?.id ?? "");
+          if (city) {
+            setGovernorateId(city.governorateId);
+          }
         }}
-        inputValue={query}
-        onInputValueChange={(value) => setQuery(value)}
-        itemToStringLabel={(item: Option) => item.label}
-        isItemEqualToValue={(a: Option, b: Option) => a.id === b.id}
-        disabled={!governorateId}
-      >
-        <ComboboxInput
-          placeholder={governorateId ? t("citySearch") : t("cityPickGovernorate")}
-          aria-label={t("city")}
-          showClear={Boolean(city)}
-          className="h-9"
-        />
-        <ComboboxContent>
-          <ComboboxEmpty>{loading ? "..." : t("cityEmpty")}</ComboboxEmpty>
-          <ComboboxList>
-            {(item: Option) => (
-              <ComboboxItem key={item.id} value={item}>
-                {item.label}
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
+        placeholder={t("citySearch")}
+        emptyText={t("cityEmpty")}
+        ariaLabel={t("city")}
+        className="h-9"
+      />
     </>
   );
 }

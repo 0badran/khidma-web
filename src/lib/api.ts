@@ -26,6 +26,8 @@ export type City = {
   governorateId: number;
   nameAr: string;
   nameEn: string;
+  governorateNameAr: string;
+  governorateNameEn: string;
 };
 
 export type Provider = {
@@ -111,32 +113,6 @@ export async function getGovernorates(locale: string) {
   return data?.governorates ?? [];
 }
 
-export async function getCities(locale: string, governorateId: string, q = "") {
-  const params = q ? `?${new URLSearchParams({ q })}` : "";
-  const data = await apiGet<{ cities: Omit<City, "governorateId">[] }>(
-    `/api/governorates/${encodeURIComponent(governorateId)}/cities${params}`,
-    locale,
-    3600,
-  );
-  return data?.cities ?? [];
-}
-
-// There is no single "all cities" route, so read each governorate's list.
-// Every request is cached for an hour.
-export async function getAllCities(locale: string, governorates: Governorate[]) {
-  const lists = await Promise.all(
-    governorates.map(async (g) => {
-      const data = await apiGet<{ cities: Omit<City, "governorateId">[] }>(
-        `/api/governorates/${g.id}/cities`,
-        locale,
-        3600,
-      );
-      return (data?.cities ?? []).map((c) => ({ ...c, governorateId: g.id }));
-    }),
-  );
-  return lists.flat();
-}
-
 export async function getProviders(locale: string, filters: ProviderFilters = {}) {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(filters)) {
@@ -167,4 +143,19 @@ export async function getRatings(locale: string, id: string) {
 
 export function pick(locale: string, ar: string, en: string) {
   return locale === "ar" ? ar : en;
+}
+
+export type CityQuery = { q?: string; id?: string; governorateId?: string };
+
+export async function getCities(locale: string, query: CityQuery = {}) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value) params.set(key, value);
+  }
+  const data = await apiGet<{ cities: City[] }>(
+    `/api/cities?${params}`,
+    locale,
+    3600,
+  );
+  return data?.cities ?? [];
 }

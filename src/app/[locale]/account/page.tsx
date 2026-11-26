@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import { AccountForm } from "@/components/account-form";
-import { getAllCities, getCategories, getGovernorates } from "@/lib/api";
+import { getCategories, getGovernorates } from "@/lib/api";
 import { getMe } from "@/lib/session";
 
 export default async function AccountPage() {
@@ -16,8 +16,6 @@ export default async function AccountPage() {
     getCategories(locale),
     getGovernorates(locale),
   ]);
-
-  const cities = me.provider ? await getAllCities(locale, governorates) : [];
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 p-4 py-8">
@@ -45,7 +43,7 @@ export default async function AccountPage() {
         }}
         categories={categories}
         governorates={governorates}
-        cities={cities}
+       
       />
     </main>
   );

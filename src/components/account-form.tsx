@@ -10,6 +10,7 @@ import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SecurityForms } from "@/components/security-forms";
+import { CityCombobox } from "@/components/city-combobox";
 import { Field, selectClass } from "@/components/form-field";
 import {
   deleteAccountAction,
@@ -18,7 +19,6 @@ import {
 } from "@/lib/account-actions";
 
 type Option = { id: number; nameAr: string; nameEn: string };
-type City = Option & { governorateId: number };
 
 export type AccountData = {
   role: "customer" | "provider";
@@ -40,12 +40,10 @@ export function AccountForm({
   data,
   categories,
   governorates,
-  cities,
 }: {
   data: AccountData;
   categories: Option[];
   governorates: Option[];
-  cities: City[];
 }) {
   const t = useTranslations("Account");
   const tv = useTranslations("Validation");
@@ -99,25 +97,15 @@ export function AccountForm({
       name: data.name,
       birthDate: data.birthDate,
       categoryId: String(data.provider?.categoryId ?? ""),
-      governorateId: "",
+      governorateId: data.provider ? String(data.provider.governorateId) : "",
       cityId: String(data.provider?.cityId ?? ""),
       yearsOfExperience: data.provider?.yearsOfExperience?.toString() ?? "",
       bio: data.provider?.bio ?? "",
     },
   });
 
-  // All cities are listed. The optional governorate only narrows the list.
   const governorateId = useWatch({ control, name: "governorateId" });
-  const governorateName = new Map(governorates.map((g) => [g.id, name(g)]));
-  const cityOptions = cities
-    .filter((c) => !governorateId || String(c.governorateId) === governorateId)
-    .map((c) => ({
-      id: c.id,
-      label: governorateId
-        ? name(c)
-        : `${name(c)}, ${governorateName.get(c.governorateId) ?? ""}`,
-    }))
-    .sort((x, y) => x.label.localeCompare(y.label, locale));
+  const cityId = useWatch({ control, name: "cityId" });
 
   const onSubmit = (v: Values) => {
     setMessage(null);
@@ -260,10 +248,7 @@ export function AccountForm({
               <select
                 {...register("governorateId", {
                   onChange: (e) => {
-                    const city = cities.find((c) => String(c.id) === getValues("cityId"));
-                    if (e.target.value && city && String(city.governorateId) !== e.target.value) {
-                      setValue("cityId", "");
-                    }
+                    if (e.target.value && getValues("cityId")) setValue("cityId", "");
                   },
                 })}
                 className={selectClass}
@@ -277,14 +262,19 @@ export function AccountForm({
               </select>
             </Field>
             <Field required label={t("city")} error={errors.cityId?.message}>
-              <select {...register("cityId")} className={selectClass}>
-                <option value="">{t("choose")}</option>
-                {cityOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              <CityCombobox
+            cityId={cityId}
+            governorateId={governorateId}
+            onSelect={(city) => {
+              setValue("cityId", city?.id ?? "", { shouldValidate: true });
+              if (city) {
+                setValue("governorateId", city.governorateId);
+              }
+            }}
+            placeholder={t("citySearch")}
+            emptyText={t("cityEmpty")}
+            ariaLabel={t("city")}
+          />
             </Field>
             <Field label={t("years")} error={errors.yearsOfExperience?.message}>
               <Input type="number" min={0} max={60} {...register("yearsOfExperience")} dir="ltr" />

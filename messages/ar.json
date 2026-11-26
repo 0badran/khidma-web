@@ -113,7 +113,9 @@
     "stepOf": "الخطوة {current} من {total}",
     "profileLater": "تقدر تضيف صورتك وسنين خبرتك ونبذة عنك من بروفايلك بعد إنشاء الحساب.",
     "governorateOptional": "المحافظة (اختياري)",
-    "allGovernorates": "كل المحافظات"
+    "allGovernorates": "كل المحافظات",
+    "citySearch": "ابحث عن مدينة",
+    "cityEmpty": "مفيش مدن مطابقة"
   },
   "Account": {
     "governorateOptional": "المحافظة (اختياري)",
@@ -146,7 +148,9 @@
     "deleteConfirm": "أيوه، احذف حسابي",
     "cancel": "إلغاء",
     "inactive": "حسابك موقوف حاليًا وبيظهر مش متاح للعملاء.",
-    "viewPublic": "شوف صفحتك العامة"
+    "viewPublic": "شوف صفحتك العامة",
+    "citySearch": "ابحث عن مدينة",
+    "cityEmpty": "مفيش مدن مطابقة"
   },
   "Rating": {
     "title": "قيّم الفني",

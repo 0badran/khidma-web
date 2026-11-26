@@ -6,7 +6,6 @@ import { LocationFilter } from "@/components/location-filter";
 import { ProviderCard } from "@/components/provider-card";
 import {
   getCategories,
-  getCities,
   getGovernorates,
   getProviders,
   MaintenanceError,
@@ -31,12 +30,12 @@ export default async function ProvidersPage({
   const locale = await getLocale();
   const t = await getTranslations("Providers");
   const { q, categoryId, governorateId, cityId: rawCityId, page } = await searchParams;
-  const cityId = governorateId ? rawCityId : undefined;
+  const cityId = rawCityId;
   const pageNumber = Math.max(1, Number(page) || 1);
 
-  let categories, governorates, result, cityOptions;
+  let categories, governorates, result;
   try {
-    [categories, governorates, result, cityOptions] = await Promise.all([
+    [categories, governorates, result] = await Promise.all([
       getCategories(locale),
       getGovernorates(locale),
       getProviders(locale, {
@@ -47,7 +46,6 @@ export default async function ProvidersPage({
         page: pageNumber,
         limit: PAGE_SIZE,
       }),
-      governorateId && cityId ? getCities(locale, governorateId) : Promise.resolve([]),
     ]);
   } catch (error) {
     if (error instanceof MaintenanceError) {
@@ -65,10 +63,6 @@ export default async function ProvidersPage({
     params.set("page", String(target));
     return `/providers?${params}`;
   };
-  const found = cityOptions.find((c) => String(c.id) === cityId);
-  const initialCity = found
-    ? { id: String(found.id), label: pick(locale, found.nameAr, found.nameEn) }
-    : null;
   const hasNext = result.providers.length === PAGE_SIZE;
 
   return (
@@ -87,7 +81,7 @@ export default async function ProvidersPage({
         <LocationFilter
           governorates={governorates}
           initialGovernorateId={governorateId ?? ""}
-          initialCity={initialCity}
+          initialCityId={cityId ?? ""}
           selectClass={selectClass}
         />
         <Button type="submit" size="lg">
