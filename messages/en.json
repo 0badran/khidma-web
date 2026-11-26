@@ -94,15 +94,15 @@
     "governorate": "Governorate",
     "city": "City",
     "choose": "Choose",
-    "years": "Years of experience (optional)",
-    "bio": "Bio (optional)",
-    "photoLater": "You can add your photo after creating the account.",
     "submit": "Create account",
     "submitting": "Creating...",
     "back": "Back",
     "failed": "Something went wrong. Please try again.",
     "haveAccount": "Already have an account?",
-    "login": "Log in"
+    "login": "Log in",
+    "next": "Next",
+    "stepOf": "Step {current} of {total}",
+    "profileLater": "You can add your photo, years of experience and bio from your profile after creating the account."
   },
   "Account": {
     "title": "My account",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import { clearDraft, readDraft, writeDraft } from "@/lib/draft-store";
 
 type Option = { id: number; nameAr: string; nameEn: string };
 
+type Step = "details" | "work" | "code";
 const DRAFT_KEY = "register";
 const EMPTY_VALUES = {
   role: "customer",
@@ -26,8 +27,6 @@ const EMPTY_VALUES = {
   categoryId: "",
   governorateId: "",
   cityId: "",
-  yearsOfExperience: "",
-  bio: "",
 } as const;
 
 async function fetchCities(governorateId: string): Promise<Option[]> {
@@ -54,9 +53,9 @@ export function RegisterForm({
   const locale = useLocale();
   const [pending, startTransition] = useTransition();
   const [saved] = useState(() =>
-    readDraft<{ step: 1 | 2; values: Values }>(DRAFT_KEY),
+    readDraft<{ step: Step; values: Values }>(DRAFT_KEY),
   );
-  const [step, setStep] = useState<1 | 2>(saved?.step ?? 1);
+  const [step, setStep] = useState<Step>(saved?.step ?? "details");
   const [formError, setFormError] = useState<string | null>(null);
   const [cities, setCities] = useState<Option[]>([]);
 
@@ -74,19 +73,11 @@ export function RegisterForm({
       categoryId: z.string(),
       governorateId: z.string(),
       cityId: z.string(),
-      yearsOfExperience: z.string(),
-      bio: z.string().max(1000, tv("bio")),
     })
     .superRefine((v, ctx) => {
       if (v.role !== "provider") return;
       for (const key of ["categoryId", "cityId"] as const) {
         if (!v[key]) ctx.addIssue({ code: "custom", path: [key], message: tv("required") });
-      }
-      if (v.yearsOfExperience) {
-        const n = Number(v.yearsOfExperience);
-        if (!Number.isInteger(n) || n < 0 || n > 60) {
-          ctx.addIssue({ code: "custom", path: ["yearsOfExperience"], message: tv("years") });
-        }
       }
     });
   type Values = z.infer<typeof schema>;
@@ -111,14 +102,21 @@ export function RegisterForm({
     writeDraft(DRAFT_KEY, { step, values: allValues });
   }, [step, allValues]);
 
+  // The saved city can only be selected once its option exists.
+  const pendingCity = useRef(saved?.values.cityId ?? "");
+  useEffect(() => {
+    if (cities.length > 0 && pendingCity.current) {
+      setValue("cityId", pendingCity.current);
+      pendingCity.current = "";
+    }
+  }, [cities, setValue]);
+
   useEffect(() => {
     const governorateId = saved?.values.governorateId;
     if (!governorateId) return;
     let cancelled = false;
     fetchCities(governorateId).then((list) => {
-      if (cancelled) return;
-      setCities(list);
-      setValue("cityId", saved.values.cityId);
+      if (!cancelled) setCities(list);
     });
     return () => {
       cancelled = true;
@@ -127,21 +125,38 @@ export function RegisterForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const sendCode = () => {
+  const isProvider = role === "provider";
+  const total = isProvider ? 3 : 2;
+  const current = step === "details" ? 1 : step === "work" ? 2 : total;
+
+  const requestCode = () => {
     startTransition(async () => {
-      const fields: (keyof Values)[] = ["email", "name", "phone", "birthDate", "password", "bio"];
-      if (getValues("role") === "provider") {
-        fields.push("categoryId", "cityId", "yearsOfExperience");
-      }
-      if (!(await trigger(fields))) return;
       setFormError(null);
       const result = await requestRegisterOtp(getValues("email"), t("failed"));
       if (!result.ok) {
         setError("email", { message: result.message });
+        setStep("details");
         return;
       }
-      setStep(2);
+      setStep("code");
     });
+  };
+
+  // Details stage: a customer goes straight to the code, a provider
+  // continues to the work stage first.
+  const submitDetails = async () => {
+    const fields: (keyof Values)[] = ["email", "name", "phone", "birthDate", "password"];
+    if (!(await trigger(fields))) return;
+    if (getValues("role") === "provider") {
+      setStep("work");
+      return;
+    }
+    requestCode();
+  };
+
+  const submitWork = async () => {
+    if (!(await trigger(["categoryId", "cityId"]))) return;
+    requestCode();
   };
 
   const loadCities = async (governorateId: string) => {
@@ -168,8 +183,6 @@ export function RegisterForm({
     if (v.role === "provider") {
       body.categoryId = Number(v.categoryId);
       body.cityId = Number(v.cityId);
-      if (v.yearsOfExperience) body.yearsOfExperience = Number(v.yearsOfExperience);
-      if (v.bio) body.bio = v.bio;
     }
     startTransition(async () => {
       const result = await registerAction(body, t("failed"));
@@ -185,8 +198,10 @@ export function RegisterForm({
       for (const [field, messages] of fieldErrors) {
         setError(field as keyof Values, { message: messages[0] });
       }
-      // A problem in a details field means the user must go back and fix it.
-      if (fieldErrors.some(([field]) => field !== "otp")) setStep(1);
+      // A problem in an earlier stage sends the user back to fix it.
+      const failed = fieldErrors.map(([field]) => field);
+      if (failed.some((f) => f === "categoryId" || f === "cityId")) setStep("work");
+      else if (failed.some((f) => f !== "otp")) setStep("details");
     });
   };
 
@@ -199,9 +214,14 @@ export function RegisterForm({
     </p>
   );
 
-  if (step === 2) {
+  const progress = (
+    <p className="text-sm text-muted-foreground">{t("stepOf", { current, total })}</p>
+  );
+
+  if (step === "code") {
     return (
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {progress}
         <p className="text-sm text-muted-foreground">{t("codeSent")}</p>
         <Field label={t("otp")} error={errors.otp?.message}>
           <Input
@@ -221,7 +241,73 @@ export function RegisterForm({
         <Button type="submit" size="lg" disabled={pending}>
           {pending ? t("submitting") : t("submit")}
         </Button>
-        <Button type="button" variant="ghost" onClick={() => setStep(1)}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setStep(isProvider ? "work" : "details")}
+        >
+          {t("back")}
+        </Button>
+        {loginLink}
+      </form>
+    );
+  }
+
+  if (step === "work") {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submitWork();
+        }}
+        className="flex flex-col gap-4"
+      >
+        {progress}
+        <Field label={t("category")} error={errors.categoryId?.message}>
+          <select {...register("categoryId")} className={selectClass}>
+            <option value="">{t("choose")}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {name(c)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t("governorate")}>
+          <select
+            {...register("governorateId", {
+              onChange: (e) => loadCities(e.target.value),
+            })}
+            className={selectClass}
+          >
+            <option value="">{t("choose")}</option>
+            {governorates.map((g) => (
+              <option key={g.id} value={g.id}>
+                {name(g)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label={t("city")} error={errors.cityId?.message}>
+          <select {...register("cityId")} className={selectClass} disabled={cities.length === 0}>
+            <option value="">{t("choose")}</option>
+            {cities.map((c) => (
+              <option key={c.id} value={c.id}>
+                {name(c)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <p className="text-xs text-muted-foreground">{t("profileLater")}</p>
+        {formError ? (
+          <p role="alert" className="text-sm text-destructive">
+            {formError}
+          </p>
+        ) : null}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending ? t("sending") : t("sendCode")}
+        </Button>
+        <Button type="button" variant="ghost" onClick={() => setStep("details")}>
           {t("back")}
         </Button>
         {loginLink}
@@ -233,10 +319,11 @@ export function RegisterForm({
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        sendCode();
+        void submitDetails();
       }}
       className="flex flex-col gap-4"
     >
+      {progress}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium">{t("role")}</legend>
         <div className="grid grid-cols-2 gap-2">
@@ -271,65 +358,13 @@ export function RegisterForm({
       <Field label={t("password")} error={errors.password?.message}>
         <Input type="password" {...register("password")} autoComplete="new-password" dir="ltr" />
       </Field>
-
-      {role === "provider" ? (
-        <>
-          <Field label={t("category")} error={errors.categoryId?.message}>
-            <select {...register("categoryId")} className={selectClass}>
-              <option value="">{t("choose")}</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {name(c)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t("governorate")}>
-            <select
-              {...register("governorateId", {
-                onChange: (e) => loadCities(e.target.value),
-              })}
-              className={selectClass}
-            >
-              <option value="">{t("choose")}</option>
-              {governorates.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {name(g)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t("city")} error={errors.cityId?.message}>
-            <select {...register("cityId")} className={selectClass} disabled={cities.length === 0}>
-              <option value="">{t("choose")}</option>
-              {cities.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {name(c)}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label={t("years")} error={errors.yearsOfExperience?.message}>
-            <Input type="number" min={0} max={60} {...register("yearsOfExperience")} dir="ltr" />
-          </Field>
-          <Field label={t("bio")} error={errors.bio?.message}>
-            <textarea
-              {...register("bio")}
-              rows={4}
-              className="w-full border border-input bg-transparent p-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
-            />
-          </Field>
-          <p className="text-xs text-muted-foreground">{t("photoLater")}</p>
-        </>
-      ) : null}
-
       {formError ? (
         <p role="alert" className="text-sm text-destructive">
           {formError}
         </p>
       ) : null}
       <Button type="submit" size="lg" disabled={pending}>
-        {pending ? t("sending") : t("sendCode")}
+        {pending ? t("sending") : isProvider ? t("next") : t("sendCode")}
       </Button>
       {loginLink}
     </form>
