@@ -2,9 +2,11 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { redirect, Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LocationFilter } from "@/components/location-filter";
 import { ProviderCard } from "@/components/provider-card";
 import {
   getCategories,
+  getCities,
   getGovernorates,
   getProviders,
   MaintenanceError,
@@ -22,26 +24,30 @@ export default async function ProvidersPage({
     q?: string;
     categoryId?: string;
     governorateId?: string;
+    cityId?: string;
     page?: string;
   }>;
 }) {
   const locale = await getLocale();
   const t = await getTranslations("Providers");
-  const { q, categoryId, governorateId, page } = await searchParams;
+  const { q, categoryId, governorateId, cityId: rawCityId, page } = await searchParams;
+  const cityId = governorateId ? rawCityId : undefined;
   const pageNumber = Math.max(1, Number(page) || 1);
 
-  let categories, governorates, result;
+  let categories, governorates, result, cityOptions;
   try {
-    [categories, governorates, result] = await Promise.all([
+    [categories, governorates, result, cityOptions] = await Promise.all([
       getCategories(locale),
       getGovernorates(locale),
       getProviders(locale, {
         q,
         categoryId,
         governorateId,
+        cityId,
         page: pageNumber,
         limit: PAGE_SIZE,
       }),
+      governorateId && cityId ? getCities(locale, governorateId) : Promise.resolve([]),
     ]);
   } catch (error) {
     if (error instanceof MaintenanceError) {
@@ -55,15 +61,20 @@ export default async function ProvidersPage({
     if (q) params.set("q", q);
     if (categoryId) params.set("categoryId", categoryId);
     if (governorateId) params.set("governorateId", governorateId);
+    if (cityId) params.set("cityId", cityId);
     params.set("page", String(target));
     return `/providers?${params}`;
   };
+  const found = cityOptions.find((c) => String(c.id) === cityId);
+  const initialCity = found
+    ? { id: String(found.id), label: pick(locale, found.nameAr, found.nameEn) }
+    : null;
   const hasNext = result.providers.length === PAGE_SIZE;
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-4 py-8">
       <h1 className="text-2xl font-bold">{t("title")}</h1>
-      <form className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+      <form className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto_auto]">
         <Input name="q" defaultValue={q} placeholder={t("searchPlaceholder")} className="h-9" />
         <select name="categoryId" defaultValue={categoryId ?? ""} className={selectClass} aria-label={t("category")}>
           <option value="">{t("allCategories")}</option>
@@ -73,14 +84,12 @@ export default async function ProvidersPage({
             </option>
           ))}
         </select>
-        <select name="governorateId" defaultValue={governorateId ?? ""} className={selectClass} aria-label={t("governorate")}>
-          <option value="">{t("allGovernorates")}</option>
-          {governorates.map((g) => (
-            <option key={g.id} value={g.id}>
-              {pick(locale, g.nameAr, g.nameEn)}
-            </option>
-          ))}
-        </select>
+        <LocationFilter
+          governorates={governorates}
+          initialGovernorateId={governorateId ?? ""}
+          initialCity={initialCity}
+          selectClass={selectClass}
+        />
         <Button type="submit" size="lg">
           {t("apply")}
         </Button>

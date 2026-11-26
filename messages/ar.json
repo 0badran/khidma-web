@@ -24,7 +24,11 @@
     "apply": "تطبيق",
     "empty": "مفيش فنيين مطابقين للبحث.",
     "previous": "السابق",
-    "next": "التالي"
+    "next": "التالي",
+    "city": "المدينة",
+    "citySearch": "ابحث عن مدينة",
+    "cityPickGovernorate": "اختار المحافظة الأول",
+    "cityEmpty": "مفيش مدن مطابقة"
   },
   "Provider": {
     "experience": "خبرة {years} سنة",

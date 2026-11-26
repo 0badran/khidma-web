@@ -66,6 +66,7 @@ export type ProviderFilters = {
   q?: string;
   categoryId?: string;
   governorateId?: string;
+  cityId?: string;
   page?: number;
   limit?: number;
 };
@@ -108,6 +109,16 @@ export async function getGovernorates(locale: string) {
     locale,
   );
   return data?.governorates ?? [];
+}
+
+export async function getCities(locale: string, governorateId: string, q = "") {
+  const params = q ? `?${new URLSearchParams({ q })}` : "";
+  const data = await apiGet<{ cities: Omit<City, "governorateId">[] }>(
+    `/api/governorates/${encodeURIComponent(governorateId)}/cities${params}`,
+    locale,
+    3600,
+  );
+  return data?.cities ?? [];
 }
 
 // There is no single "all cities" route, so read each governorate's list.

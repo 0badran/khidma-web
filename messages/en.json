@@ -24,7 +24,11 @@
     "apply": "Apply",
     "empty": "No providers match your search.",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "city": "City",
+    "citySearch": "Search for a city",
+    "cityPickGovernorate": "Choose a governorate first",
+    "cityEmpty": "No matching cities"
   },
   "Provider": {
     "experience": "{years} years of experience",
